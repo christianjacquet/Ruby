@@ -36,9 +36,7 @@ import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.ARBVertexBufferObject.*;
 import com.digitalemu.gui.Monitor;
 import com.digitalemu.world.Material;
-//import com.digitalemu.world.Block;
-//import com.digitalemu.world.Chunk;
-//import com.digitalemu.world.GenerateWorldClassic;
+
 import com.digitalemu.world.World;
 import com.digitalemu.world.GPS;
 import com.digitalemu.world.Textures;
@@ -66,7 +64,10 @@ public class GameLoopText {
 	private long seconds;
 	private float elapsedTime;
 	private float render3d;
-	private float render2d;
+	private float render2da;
+	private float render2db;
+	private float render2dc;
+	private float render2dd;
 	private int fps=0;
 	private long ramTotal=0;
 	private long ramFree=0;
@@ -266,17 +267,33 @@ public class GameLoopText {
         return world.getVoxel(toGPS(temp));
     }
     
+    public void drawCrossAim(){
+
+    	GL11.glColor3f(0.0f, 1.0f, 1.0f);
+        GL11.glBegin(GL11.GL_LINES);
+        GL11.glLineWidth(25.0f);
+        GL11.glVertex2f( windowWidth/2,windowHeight/2-50);
+        GL11.glVertex2f(windowWidth/2,windowHeight/2+50);
+        GL11.glVertex2f(windowWidth/2-50,windowHeight/2);
+        GL11.glVertex2f(windowWidth/2+50,windowHeight/2);
+        GL11.glEnd();
+    }
+    
     public void simpletext(){
     	BufferedImage test = new BufferedImage(400, 400, BufferedImage.TYPE_INT_ARGB);
+
         Graphics2D g2d = test.createGraphics();
 
+        // 3ms
         g2d.setColor(new Color(0.0f, 0.0f, 0.0f, 0.5f));
         g2d.fillRect(0, 0, 400, 400); //A transparent white background
-        
+
+        // 0ms
         g2d.setColor(Color.red);
         g2d.drawRect(0, 0, 400, 400); //A red frame around the image
         //g2d.fillRect(10, 10, 10, 10); //A red box 
-        
+
+        // 0ms
         g2d.setColor(Color.WHITE);
     	GL11.glColor3f(0.0f, 1.0f, 1.0f);
 
@@ -284,11 +301,12 @@ public class GameLoopText {
         
         //g2d.setFont(font);
         g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
         g2d.drawString("World: "+dlistGPS.length, 10, 16); 
         g2d.drawString("FPS: "+fps, 10, 32);
         g2d.drawString("Looptime: "+elapsedTime, 60, 32);
         g2d.drawString("Render3D: "+render3d, 10, 48);
-        g2d.drawString("Render2D: "+render2d, 10, 64);
+        g2d.drawString("Render2D: "+render2da+" - "+render2db+" - "+render2dc+" - "+render2dd, 10, 64);
         g2d.drawString("X: "+position.x, 10, 80);
         g2d.drawString("Y: "+position.y, 10, 96);
         g2d.drawString("Z: "+position.z, 10, 112);
@@ -300,9 +318,10 @@ public class GameLoopText {
         g2d.drawString("Disrance: "+lookAtDistance, 10, 208);
         g2d.drawString("radx: "+radx+" rady: "+rady+" radz; "+radz,10,224);
         g2d.drawString("difx: "+diffx+" dify: "+diffy+" difz: "+diffz+" t: "+difft,10,240);
-        
-        int textureID = loadTexture(test);
-        
+
+        int textureID = loadTexture(test); // <---- This stupid call takes 17ms
+		render2dd = (Sys.getTime()-time);
+
         glEnable(GL_TEXTURE_2D); //Enable texturing
         
         
@@ -594,9 +613,13 @@ public class GameLoopText {
             	render3d = (Sys.getTime()-time);
             	// Render 2D HUD
             	initGL2D();
-    			//GL11.glLoadIdentity(); // Reset The Current Modelview Matrix
-    			simpletext();
+            	drawCrossAim();
 
+    			//GL11.glLoadIdentity(); // Reset The Current Modelview Matrix
+    			render2da = (Sys.getTime()-time);
+
+    			simpletext();
+    			render2db = (Sys.getTime()-time);
             	//glCallList(inventorydisplaylist);
             	GL11.glLoadIdentity(); // Reset The Current Modelview Matrix
 
@@ -604,7 +627,7 @@ public class GameLoopText {
             	//GL11.glLoadIdentity(); // Reset The Current Modelview Matrix
             	//renderTexture(textureInventoryHUD.getTexture(),hudPos.DownRight);
 
-            	render2d = (Sys.getTime()-time);
+            	render2dc = (Sys.getTime()-time);
 
             	endGL2D();
             	time2=time;
