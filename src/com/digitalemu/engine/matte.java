@@ -12,7 +12,7 @@ public class matte {
 	float x2;
 	float y2;
 	float z2;
-	float distanceX;
+	float distanceX; 
 	float distanceY;
 	float distanceZ;
 	float yaw = 0;
