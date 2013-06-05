@@ -104,6 +104,7 @@ public class GameLoopText {
 	private FloatBuffer lModelAmbient;
 	private int lx=0,ly=0,lz=0;
 	static Monitor monitor;
+	static Monitor stats;
 	private String message ="";
 	private enum hudPos {UpperLeft, UpperCenter, UpperRight, CenterLeft, Center, CenterRight, DownLeft, DownCenter, DownRight};
 	private static final int BYTES_PER_PIXEL = 4;
@@ -119,6 +120,10 @@ public class GameLoopText {
 	private GPS lookAtGPS = new GPS(0,0,0);
 	private short lookAtMaterial = Material.m_null;
 	private boolean lookAtMaterialFound=false;
+
+	BufferedImage test = new BufferedImage(400, 400, BufferedImage.TYPE_INT_ARGB);
+	Graphics2D g2d = test.createGraphics();
+
 	
     
 
@@ -126,9 +131,11 @@ public class GameLoopText {
 		monitor.println(message);
 	}
 	
+	
     public static void main(String args[]) {
     	monitor = new Monitor("Server");
 		msg("Starting Mycraft");
+		stats = new Monitor("stats");
         boolean fullscreen = false;
         if(args.length>0) {
             if(args[0].equalsIgnoreCase("fullscreen")) {
@@ -279,20 +286,55 @@ public class GameLoopText {
         GL11.glEnd();
     }
     
+    public void showstats(){
+    	stats.clear();
+        stats.println("World: "+dlistGPS.length); 
+        stats.println("FPS: "+fps);
+        stats.println("Looptime: "+elapsedTime);
+        stats.println("Render3D: "+render3d);
+        stats.println("Render2D: "+render2da+" - "+render2db+" - "+render2dc+" - "+render2dd);
+        stats.println("X: "+position.x);
+        stats.println("Y: "+position.y);
+        stats.println("Z: "+position.z);
+        stats.println("Yaw: "+(int)yaw+" Pitch: "+(int)pitch);
+        stats.println("Yaw.x: "+(float)Math.sin(Math.toRadians(yaw))+" Yaw.y: "+(float)Math.cos(Math.toRadians(yaw)));
+        stats.println("Below me: "+(belowThis(position)));
+        stats.println("RAM used: "+ramUsed+" free: "+ramFree+" total: "+ramTotal);
+        stats.println("X: "+lookAtGPS.getX()+" Y: "+lookAtGPS.getY()+" Z: "+lookAtGPS.getZ()+ " M: "+lookAtMaterial+" F: "+lookAtMaterialFound);
+        stats.println("Disrance: "+lookAtDistance);
+        stats.println("radx: "+radx+" rady: "+rady+" radz; "+radz);
+        stats.println("difx: "+diffx+" dify: "+diffy+" difz: "+diffz+" t: "+difft);
+    }
+    
     public void simpletext(){
-    	BufferedImage test = new BufferedImage(400, 400, BufferedImage.TYPE_INT_ARGB);
+    	
+    	//BufferedImage 
+//    	test = new BufferedImage(400, 400, BufferedImage.TYPE_INT_ARGB);
+//    	Graphics2D g2d = test.createGraphics();
 
-        Graphics2D g2d = test.createGraphics();
+    	g2d.clearRect(0, 0, 400, 400);
+    	//GL11.glColor3f(0.0f, 0.0f, 1.0f);
+    	g2d.setColor(new Color(0.0f, 0.0f, 0.0f, 1.0f));
+    	g2d.fillRect(100, 100, 400, 400);
+    
 
-        // 3ms
-        g2d.setColor(new Color(0.0f, 0.0f, 0.0f, 0.5f));
-        g2d.fillRect(0, 0, 400, 400); //A transparent white background
+//    	g2d.setColor(new Color(0.0f, 0.0f, 0.0f, 0.3f));
+//        g2d.fillRect(000, 000, 400, 400); //A transparent white background
+//        g2d.fillRect(000, 000, 400, 400); //A transparent white background
+//        g2d.fillRect(000, 000, 400, 400); //A transparent white background
+//        g2d.fillRect(000, 000, 400, 400); //A transparent white background
+//        g2d.fillRect(000, 000, 400, 400); //A transparent white background
+//        g2d.fillRect(000, 000, 400, 400); //A transparent white background
+//
+//        g2d.fillRect(000, 000, 400, 400); //A transparent white background
+
 
         // 0ms
-        g2d.setColor(Color.red);
-        g2d.drawRect(0, 0, 400, 400); //A red frame around the image
-        //g2d.fillRect(10, 10, 10, 10); //A red box 
+//        g2d.setColor(Color.red);
+//        g2d.drawRect(0, 0, 400, 400); //A red frame around the image
+//        g2d.fillRect(10, 10, 10, 10); //A red box 
 
+    	
         // 0ms
         g2d.setColor(Color.WHITE);
     	GL11.glColor3f(0.0f, 1.0f, 1.0f);
@@ -321,6 +363,7 @@ public class GameLoopText {
 
         int textureID = loadTexture(test); // <---- This stupid call takes 17ms
 		render2dd = (Sys.getTime()-time);
+
 
         glEnable(GL_TEXTURE_2D); //Enable texturing
         
@@ -576,14 +619,18 @@ public class GameLoopText {
         int fps=0;
         int inventorydisplaylist; 
         Font font = new Font("monospaced", Font.BOLD, 16);
+        
+        
+
         try {
             init();
-            world = new World(1, 64,  textureMaterials);
+            world = new World(1, 128,  textureMaterials);
             dlistGPS = world.compileDlist();
             inventorydisplaylist = compileInventoryDisplayList();
             //world.generateTerrain(123);       
           //hide the mouse
             Mouse.setGrabbed(true);
+
             while (!done) {
             	time = Sys.getTime();
             	elapsedTime = ((time - time2));
@@ -618,7 +665,8 @@ public class GameLoopText {
     			//GL11.glLoadIdentity(); // Reset The Current Modelview Matrix
     			render2da = (Sys.getTime()-time);
 
-    			simpletext();
+    			//simpletext();
+    			showstats();
     			render2db = (Sys.getTime()-time);
             	//glCallList(inventorydisplaylist);
             	GL11.glLoadIdentity(); // Reset The Current Modelview Matrix
