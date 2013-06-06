@@ -50,7 +50,7 @@ public class GPS {
 	}
 	
 	public void setWestEast(long val){
-		this.northSouth=val;
+		this.westEast=val;
 	}
 	
 	public void setSouthNorth(long val){

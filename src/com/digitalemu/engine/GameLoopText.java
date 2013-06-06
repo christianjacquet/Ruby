@@ -110,16 +110,19 @@ public class GameLoopText {
 	private static final int BYTES_PER_PIXEL = 4;
 	private DlistGps[] dlistGPS;
 	private Vector3f lookAtVoxel = new Vector3f(0,0,0);
-	float radx;		
-	float radz;
-	float rady;
+	private static float radx, rady, radz, distx, distz, disty;		
 	float diffx;
 	float diffz;
 	float diffy;
 	float difft;
+	static int addX, addY, addZ;
 	private GPS lookAtGPS = new GPS(0,0,0);
+	private GPS lookAtGPS2 = new GPS(0,0,0);
 	private short lookAtMaterial = Material.m_null;
+	private short lookAtMaterial2 = Material.m_null;
 	private boolean lookAtMaterialFound=false;
+	private boolean lookAtMaterialFound2=false;
+
 
 	BufferedImage test = new BufferedImage(400, 400, BufferedImage.TYPE_INT_ARGB);
 	Graphics2D g2d = test.createGraphics();
@@ -357,9 +360,10 @@ public class GameLoopText {
         g2d.drawString("Below me: "+(belowThis(position)), 10, 160);
         g2d.drawString("RAM used: "+ramUsed+" free: "+ramFree+" total: "+ramTotal, 10, 176);
         g2d.drawString("X: "+lookAtGPS.getX()+" Y: "+lookAtGPS.getY()+" Z: "+lookAtGPS.getZ()+ " M: "+lookAtMaterial+" F: "+lookAtMaterialFound, 10, 192);
-        g2d.drawString("Disrance: "+lookAtDistance, 10, 208);
-        g2d.drawString("radx: "+radx+" rady: "+rady+" radz; "+radz,10,224);
-        g2d.drawString("difx: "+diffx+" dify: "+diffy+" difz: "+diffz+" t: "+difft,10,240);
+        g2d.drawString("X: "+lookAtGPS2.getX()+" Y: "+lookAtGPS2.getY()+" Z: "+lookAtGPS2.getZ()+ " M: "+lookAtMaterial2+" F: "+lookAtMaterialFound2, 10, 208);
+        g2d.drawString("Distance: "+lookAtDistance, 10, 224);
+        g2d.drawString("radx: "+radx+" rady: "+rady+" radz; "+radz,10,240);
+        g2d.drawString("difx: "+diffx+" dify: "+diffy+" difz: "+diffz+" t: "+difft,10,256);
 
         int textureID = loadTexture(test); // <---- This stupid call takes 17ms
 		render2dd = (Sys.getTime()-time);
@@ -515,6 +519,59 @@ public class GameLoopText {
         GL11.glEnd();
     }
     
+    public void lookAt(Vector3f gps, int maxDistance){
+    	addX=0;
+    	addY=0;
+    	addZ=0;
+    	String dir = "unknown";
+    	// Calculate speed in x,z and y direction
+    	radx = (float)Math.sin(Math.toRadians(yaw));
+    	radz = (float)Math.cos(Math.toRadians(yaw));
+    	rady = (float)Math.sin(Math.toRadians(pitch));
+    	do {
+//    		System.out.println(System.currentTimeMillis()+" addx "+addX+" addy "+addY+" addz "+addZ+" x "+gps.x+" y "+gps.y+" z "+gps.z+" yaw "+yaw+" pitch "+pitch);
+//    		System.out.println("x: "+gps.x+" z: "+gps.z+" y: "+gps.y+" radx: "+radx+" radz: "+radz+" rady: "+rady);
+//	    	System.out.println("distx: "+distx+" disty: "+disty+" distz: "+distz+" direction: "+dir+" addX: "+addX+" addZ: "+addZ+" addY: "+addY);
+//	    	try {
+//				Thread.sleep(100);
+//			} catch (InterruptedException e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			}
+    		// Calculate distance to next x,z and y depending on gps and speed
+	    	if 	(radx <= 0)	{distx = ((gps.x % 1)			  +addX)/(radx);}
+	    	else 			{distx = ((((int)gps.x + 1)-gps.x)+addX)/(radx);}
+	    	if 	(rady <= 0)	{disty = ((gps.y % 1)			  +addY)/(rady);}
+	    	else 			{disty = ((((int)gps.y + 1)-gps.y)+addY)/(rady);}
+	    	if 	(radz <= 0)	{distz = ((gps.z % 1)			  +addZ)/(radz);}
+	    	else 			{distz = ((((int)gps.z + 1)-gps.z)+addZ)/(radz);}
+	    	
+	    	// Calculate shortest distance
+	    	if(Math.abs(distx)<Math.abs(disty) && Math.abs(distx)<Math.abs(distz)){
+				if(distx>=0)	{ dir="east"; 	addX++; }
+				else 			{ dir="west"; 	addX--; }
+	    	}else if(Math.abs(disty)<Math.abs(distz) && Math.abs(disty)<Math.abs(distx)){
+				if(disty>=0)	{ dir="up"; 	addY++; }
+				else 			{ dir="down"; 	addY--; }    	
+			}else{
+				if(distz>=0)	{ dir="north"; 	addZ++; }
+				else 			{ dir="south"; 	addZ--; }
+	    	}
+
+	    	
+	    	
+	    	// Check if solid material
+	    	lookAtGPS2.setWestEast((long)gps.x+addX);
+	    	lookAtGPS2.setSouthNorth((long)gps.z+addZ);
+	    	lookAtGPS2.setUpDown((long)gps.y+addY);
+    		lookAtMaterial2 = world.getVoxel(lookAtGPS2);
+    		if (lookAtMaterial2 != Material.m_air){
+    			lookAtMaterialFound2=true;
+    			break;
+    		}
+    	} while (Math.abs(addX)<maxDistance && Math.abs(addY)<maxDistance && Math.abs(addZ)<maxDistance);
+    }
+    
     public void lookAt(){
     	lookAtMaterialFound = false;
     	lookAtVoxel.x=position.x;
@@ -635,6 +692,7 @@ public class GameLoopText {
             	time = Sys.getTime();
             	elapsedTime = ((time - time2));
             	lookAt();
+            	lookAt(position,6);
             	
             	// Render
             	clearRenderer();
@@ -656,7 +714,7 @@ public class GameLoopText {
             		GL11.glColor3f(0.6f, 0.6f, 0.6f);
                 	drawWireframe(lookAtGPS);
             	}
-        		//drawLine(lookAtVoxel);
+        		drawLine(lookAtVoxel);
             	render3d = (Sys.getTime()-time);
             	// Render 2D HUD
             	initGL2D();
@@ -665,7 +723,7 @@ public class GameLoopText {
     			//GL11.glLoadIdentity(); // Reset The Current Modelview Matrix
     			render2da = (Sys.getTime()-time);
 
-    			//simpletext();
+    			simpletext();
     			showstats();
     			render2db = (Sys.getTime()-time);
             	//glCallList(inventorydisplaylist);
@@ -837,7 +895,7 @@ public class GameLoopText {
     public void walkForward(float distance)
     {
         position2.setX(position.getX() + (distance * (float)Math.sin(Math.toRadians(yaw))));
-        position2.setZ(position.getZ() - (distance * (float)Math.cos(Math.toRadians(yaw))));
+        position2.setZ(position.getZ() + (distance * (float)Math.cos(Math.toRadians(yaw))));
         position2.setY(position.getY());
         //msg("P2x: "+position2.x+" P2y: "+position2.y+" P2z: "+position2.z+" sin: "+(distance * (float)Math.sin(Math.toRadians(yaw)))+" cos: "+(float)Math.cos(Math.toRadians(yaw))+" yaw: "+yaw+" distance: "+distance);
         position = collisionDetect(position2,2);
@@ -849,7 +907,7 @@ public class GameLoopText {
     public void walkBackwards(float distance)
     {
         position.x -= distance * (float)Math.sin(Math.toRadians(yaw));
-        position.z += distance * (float)Math.cos(Math.toRadians(yaw));
+        position.z -= distance * (float)Math.cos(Math.toRadians(yaw));
     }
      
     //strafes the camera left relitive to its current rotation (yaw)
@@ -949,7 +1007,7 @@ public class GameLoopText {
         if (yaw>360){yaw-=360;}
         if (yaw<0){yaw+=360;}
         
-        //controll camera pitch from y movement fromt the mouse
+        //controll camera pitch from y movement from the mouse
         pitch-=(dy * mouseSensitivity);
         if (pitch>90){pitch=90;}
         if (pitch<-90){pitch=-90;}
