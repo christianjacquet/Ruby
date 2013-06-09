@@ -54,7 +54,8 @@ public class World {
 					msg(" Chunk:"+this.chunk[x][y][z]+" with gps:"+tgps.toSString()+" in chunkMap");
 					if(z==0){
 						//chunk[x][y][z].generateNormal(x+z);
-						chunk[x][y][z].generatePerlin();
+						//chunk[x][y][z].generatePerlin();
+						chunk[x][y][z].generateTestMap();
 					}
 					else {
 						chunk[x][y][z].generateNormalgrid(z+8);
@@ -129,6 +130,8 @@ public class World {
 		//msg("GPS: "+gps.gps2str()+" Chunk: "+chunk.getGps().gps2str()+" WE: "+ew+" SN: "+sn+" UD: "+ud+" Material: "+chunk.getVoxel(ew, sn, ew));
 		return chunk.getVoxel(ew, ud, sn);
 	}
+	
+	
 	
 	public short getVoxel(GPS gps){
 		Chunk3 chunk=getChunk(gps);

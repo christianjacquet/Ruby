@@ -102,6 +102,30 @@ public class Chunk3 {
 		}
 	}
 	
+	public void generateTestMap(){
+		for (int x = 0; x<chunkBase; x++){
+			for (int z = 0; z<chunkBase; z++){
+				for (int y = 0; y<chunkBase; y++){
+					if(y==0){this.voxel[x][y][z]=1;}
+					else {this.voxel[x][y][z]=Material.m_air;}
+					if((x==chunkBase-1) && (y<z)){ 
+						this.voxel[x][y][z]=18;}
+				}
+			}
+		}
+		this.voxel[0][0][0]=8;
+		this.voxel[0][1][0]=8;
+		this.voxel[0][2][0]=8;
+		this.voxel[8][0][8]=8;
+		this.voxel[8][1][8]=8;
+		this.voxel[8][2][8]=8;
+		this.voxel[chunkBase-1][chunkBase-1][chunkBase-1]=2;
+		this.voxel[chunkBase-1][chunkBase-2][chunkBase-1]=2;
+		this.voxel[chunkBase-1][chunkBase-3][chunkBase-1]=2;
+
+		
+	}
+	
 	public void generatePerlin(){
 		this.empty=false;
 		Byte height;
@@ -114,8 +138,15 @@ public class Chunk3 {
 					if (upDown<64){ 
 						if(upDown<height){
 							msg(height+" ");
-							
+							if (upDown<3){
 								this.voxel[leftRight][upDown][frontBack]=18;
+							}
+							else if(upDown<6){
+								this.voxel[leftRight][upDown][frontBack]=2;
+							}
+							else {
+								this.voxel[leftRight][upDown][frontBack]=1;
+							}
 							
 						}
 						else{
@@ -230,6 +261,7 @@ public class Chunk3 {
     	
 
     	float[] indexes= new float[2];
+    	// Offset to find the correct texture in texture map
     	float offset = 0.0620f;
     	float offset2 = 0.005f;
     	
@@ -353,7 +385,7 @@ public class Chunk3 {
 			GL11.glBegin(GL11.GL_QUADS);
 
 
-        	
+        	int z2;
         	for(int x=0; x<chunkBase; x++){
         		for(int y=0; y<chunkBase; y++){					
         			for(int z=0; z<chunkBase-1; z++){
@@ -362,14 +394,15 @@ public class Chunk3 {
         					// Front Face
         					glColor3f(0.8f,0.8f,0.8f);
         					indexes = getMaterialIndexes3(voxel[x][y][z]);
+        					z2=chunkBase- z -1 -chunkBase;
         					GL11.glTexCoord2f(indexes[0]+offset2, indexes[1]+offset2);
-        					GL11.glVertex3i(x,y,z+1); // Bottom Left Of The Texture and Quad
+        					GL11.glVertex3i(x,y,z2+1); // Bottom Left Of The Texture and Quad
         			        GL11.glTexCoord2f(indexes[0]+offset, indexes[1]+offset2);
-        			        GL11.glVertex3i(x+1,y,z+1); // Bottom Right Of The Texture and Quad
+        			        GL11.glVertex3i(x+1,y,z2+1); // Bottom Right Of The Texture and Quad
         			        GL11.glTexCoord2f(indexes[0]+offset, indexes[1]+offset);
-        			        GL11.glVertex3i(x+1,y+1,z+1); // Top Right Of The Texture and Quad
+        			        GL11.glVertex3i(x+1,y+1,z2+1); // Top Right Of The Texture and Quad
         			        GL11.glTexCoord2f(indexes[0]+offset2, indexes[1]+offset);
-        			        GL11.glVertex3i(x,y+1,z+1); // Top Left Of The Texture and Quad
+        			        GL11.glVertex3i(x,y+1,z2+1); // Top Left Of The Texture and Quad
         				}
         			}
         		}
@@ -382,14 +415,15 @@ public class Chunk3 {
         					// Back Face   OK ??
         					glColor3f(0.8f,0.8f,0.8f);
         					indexes = getMaterialIndexes3(voxel[x][y][z]);
+        					z2=chunkBase- z -1 -chunkBase;
         			        GL11.glTexCoord2f(indexes[0]+offset, indexes[1]+offset2);
-        			        GL11.glVertex3i(x,y,z); // Bottom Right Of The Texture and Quad
+        			        GL11.glVertex3i(x,y,z2); // Bottom Right Of The Texture and Quad
         			        GL11.glTexCoord2f(indexes[0]+offset, indexes[1]+offset);
-        			        GL11.glVertex3i(x,y+1,z); // Top Right Of The Texture and Quad
+        			        GL11.glVertex3i(x,y+1,z2); // Top Right Of The Texture and Quad
         			        GL11.glTexCoord2f(indexes[0]+offset2, indexes[1]+offset);
-        			        GL11.glVertex3i(x+1,y+1,z); // Top Left Of The Texture and Quad
+        			        GL11.glVertex3i(x+1,y+1,z2); // Top Left Of The Texture and Quad
         			        GL11.glTexCoord2f(indexes[0]+offset2, indexes[1]+offset2);
-        			        GL11.glVertex3i(x+1,y,z); // Bottom Left Of The Texture and Quad
+        			        GL11.glVertex3i(x+1,y,z2); // Bottom Left Of The Texture and Quad
         				}
         			}
         		}
@@ -402,14 +436,15 @@ public class Chunk3 {
         			        // Top Face
         					glColor3f(1.0f,1.0f,1.0f);
         					indexes = getMaterialIndexes3(voxel[x][y][z]);
+        					z2=chunkBase- z -1 -chunkBase;
         			        GL11.glTexCoord2f(indexes[0]+offset2, indexes[1]+offset);
-        			        GL11.glVertex3i(x,y+1,z); // Top Left Of The Texture and Quad
+        			        GL11.glVertex3i(x,y+1,z2); // Top Left Of The Texture and Quad
         			        GL11.glTexCoord2f(indexes[0]+offset2, indexes[1]+offset2);
-        			        GL11.glVertex3i(x,y+1,z+1); // Bottom Left Of The Texture and Quad
+        			        GL11.glVertex3i(x,y+1,z2+1); // Bottom Left Of The Texture and Quad
         			        GL11.glTexCoord2f(indexes[0]+offset, indexes[1]+offset2);
-        			        GL11.glVertex3i(x+1,y+1,z+1); // Bottom Right Of The Texture and Quad
+        			        GL11.glVertex3i(x+1,y+1,z2+1); // Bottom Right Of The Texture and Quad
         			        GL11.glTexCoord2f(indexes[0]+offset, indexes[1]+offset);
-        			        GL11.glVertex3i(x+1,y+1,z); // Top Right Of The Texture and Quad
+        			        GL11.glVertex3i(x+1,y+1,z2); // Top Right Of The Texture and Quad
         				}
         			}
         		}
@@ -422,14 +457,15 @@ public class Chunk3 {
         			        // Bottom Face
         					glColor3f(0.8f,0.8f,0.8f);
         					indexes = getMaterialIndexes3(voxel[x][y][z]);
+        					z2=chunkBase- z -1 -chunkBase;
         			        GL11.glTexCoord2f(indexes[0]+offset, indexes[1]+offset);
-        			        GL11.glVertex3i(x,y,z); // Top Right Of The Texture and Quad
+        			        GL11.glVertex3i(x,y,z2); // Top Right Of The Texture and Quad
         			        GL11.glTexCoord2f(indexes[0]+offset2, indexes[1]+offset);
-        			        GL11.glVertex3i(x+1,y,z); // Top Left Of The Texture and Quad
+        			        GL11.glVertex3i(x+1,y,z2); // Top Left Of The Texture and Quad
         			        GL11.glTexCoord2f(indexes[0]+offset2, indexes[1]+offset2);
-        			        GL11.glVertex3i(x+1,y,z+1); // Bottom Left Of The Texture and Quad
+        			        GL11.glVertex3i(x+1,y,z2+1); // Bottom Left Of The Texture and Quad
         			        GL11.glTexCoord2f(indexes[0]+offset, indexes[1]+offset2);
-        			        GL11.glVertex3i(x,y,z+1); // Bottom Right Of The Texture and Quad
+        			        GL11.glVertex3i(x,y,z2+1); // Bottom Right Of The Texture and Quad
         				}
         			}
         		}
@@ -442,14 +478,15 @@ public class Chunk3 {
         			        // Right face    OK
         					glColor3f(0.6f,0.6f,0.6f);
         					indexes = getMaterialIndexes3(voxel[x][y][z]);
+        					z2=chunkBase- z -1 -chunkBase;
         					GL11.glTexCoord2f(indexes[0]+offset, indexes[1]+offset2);
-        			        GL11.glVertex3i(x+1,y,z); // Bottom Right Of The Texture and Quad
+        			        GL11.glVertex3i(x+1,y,z2); // Bottom Right Of The Texture and Quad
         			        GL11.glTexCoord2f(indexes[0]+offset, indexes[1]+offset);
-        			        GL11.glVertex3i(x+1,y+1,z); // Top Right Of The Texture and Quad
+        			        GL11.glVertex3i(x+1,y+1,z2); // Top Right Of The Texture and Quad
         			        GL11.glTexCoord2f(indexes[0]+offset2, indexes[1]+offset);
-        			        GL11.glVertex3i(x+1,y+1,z+1); // Top Left Of The Texture and Quad
+        			        GL11.glVertex3i(x+1,y+1,z2+1); // Top Left Of The Texture and Quad
         			        GL11.glTexCoord2f(indexes[0]+offset2, indexes[1]+offset2);
-        			        GL11.glVertex3i(x+1,y,z+1); // Bottom Left Of The Texture and Quad
+        			        GL11.glVertex3i(x+1,y,z2+1); // Bottom Left Of The Texture and Quad
         				}
         			}
         		}
@@ -462,14 +499,15 @@ public class Chunk3 {
         			        // Left Face   OK
         					glColor3f(0.6f,0.6f,0.6f);
         					indexes = getMaterialIndexes3(voxel[x][y][z]);
+        					z2=chunkBase- z -1 -chunkBase;
         			        GL11.glTexCoord2f(indexes[0]+offset2, indexes[1]+offset2);
-        			        GL11.glVertex3i(x,y,z); // Bottom Left Of The Texture and Quad
+        			        GL11.glVertex3i(x,y,z2); // Bottom Left Of The Texture and Quad
         			        GL11.glTexCoord2f(indexes[0]+offset, indexes[1]+offset2);
-        			        GL11.glVertex3i(x,y,z+1); // Bottom Right Of The Texture and Quad
+        			        GL11.glVertex3i(x,y,z2+1); // Bottom Right Of The Texture and Quad
         			        GL11.glTexCoord2f(indexes[0]+offset, indexes[1]+offset);
-        			        GL11.glVertex3i(x,y+1,z+1); // Top Right Of The Texture and Quad
+        			        GL11.glVertex3i(x,y+1,z2+1); // Top Right Of The Texture and Quad
         			        GL11.glTexCoord2f(indexes[0]+offset2, indexes[1]+offset);
-        			        GL11.glVertex3i(x,y+1,z); // Top Left Of The Texture and Quad
+        			        GL11.glVertex3i(x,y+1,z2); // Top Left Of The Texture and Quad
         				}
         			}
         		}

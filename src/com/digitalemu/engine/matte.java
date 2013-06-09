@@ -1,5 +1,9 @@
 package com.digitalemu.engine;
 
+import org.lwjgl.util.vector.Vector3f;
+
+import com.digitalemu.world.GPS;
+
 public class matte {
 
 	/**
@@ -94,6 +98,18 @@ public class matte {
         
 	}
 	System.out.println("toRadians(yaw) "+Math.toRadians(yaw));
+	Vector3f vec = new Vector3f();
+	
+	vec.x=32.32f;
+	vec.y=33.33f;
+	vec.z=34.34f;
+	System.out.println("Vector3f2str: "+vec.toString());
+	GPS gps = new GPS();
+	gps.vector3f2GPS(vec);
+	System.out.println("GPS2str: "+gps.toSString());
+	
+	
+	
 	}
 
 }

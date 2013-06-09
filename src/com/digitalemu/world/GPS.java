@@ -25,6 +25,12 @@ public class GPS {
 		this.upDown=(long) upDown;
 	}
 	
+	public GPS(Vector3f vector){
+		this.westEast=(long)vector.x;
+		this.upDown=(long)vector.y;
+		this.northSouth=(long)vector.z;
+	}
+	
 	public long getX(){
 		return this.westEast;
 	}
@@ -50,7 +56,7 @@ public class GPS {
 	}
 	
 	public void setWestEast(long val){
-		this.northSouth=val;
+		this.westEast=val;
 	}
 	
 	public void setSouthNorth(long val){
@@ -83,6 +89,13 @@ public class GPS {
 	
 	public void south(){
 		this.upDown--;	
+	}
+	
+	public GPS vector3f2GPS(Vector3f vector){
+		this.northSouth=(long)vector.z;
+		this.upDown=(long)vector.y;
+		this.westEast=(long)vector.x;
+	return this;	
 	}
 	
 	public void setGPS(GPS gps){
