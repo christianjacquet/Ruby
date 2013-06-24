@@ -83,8 +83,11 @@ public class GameLoopText {
     float movementSpeed = 10.0f; //move 10 units per second	
     float distance=0.0f;
 	//3d vector to store the camera's position in
-    private Vector3f    position    = new Vector3f(32.0f, 5.0f, 32.0f);  // starting position of player
-    private Vector3f    position2    = new Vector3f(32.0f, 0.0f, 0.0f);
+    private Vector3f    position    = new Vector3f(9.5f, 2.5f, -5.5f);  // starting position of player
+    private Vector3f    position2    = new Vector3f(16.0f, 0.0f, 0.0f);
+    private GPS	foundMaterialPos = new GPS(0,0,0);
+    private short       foundMaterial=0;
+    private String 		HowILook;
     private Vector3f    collision  = new Vector3f();
     private Vector3f    lastpos  = new Vector3f();
     //the rotation around the Y axis of the camera
@@ -110,16 +113,22 @@ public class GameLoopText {
 	private static final int BYTES_PER_PIXEL = 4;
 	private DlistGps[] dlistGPS;
 	private Vector3f lookAtVoxel = new Vector3f(0,0,0);
-	float radx;		
-	float radz;
-	float rady;
+	private static float radx, rady, radz, distx, distz, disty;		
 	float diffx;
 	float diffz;
 	float diffy;
 	float difft;
+	static int addX, addY, addZ;
 	private GPS lookAtGPS = new GPS(0,0,0);
+	private GPS lookAtGPS2 = new GPS(0,0,0);
 	private short lookAtMaterial = Material.m_null;
+	private short lookAtMaterial2 = Material.m_null;
 	private boolean lookAtMaterialFound=false;
+	private boolean lookAtMaterialFound2=false;
+	private String dir = "";
+	private String hit = "";
+	float ltx,lty, ltz;
+
 
 	BufferedImage test = new BufferedImage(400, 400, BufferedImage.TYPE_INT_ARGB);
 	Graphics2D g2d = test.createGraphics();
@@ -199,13 +208,13 @@ public class GameLoopText {
         glTranslatef((float) displayMode.getWidth() / 2.0f, (float) displayMode.getHeight() / 2.0f, 0.0f);
 
         glEnable(GL_TEXTURE_2D);
-        Texture tex = textureConsoleHUD.getTexture();
+        Texture tex = textureMaterials.getTexture();
 
 		GL11.glBindTexture(GL11.GL_TEXTURE_2D, tex.getTextureID()); // Select Our Texture
         //tex.bind(); // newdawn.slick (same library for my whole program, so this works)
 
-        float hw = tex.getTextureWidth()/2; 
-        float hh = tex.getTextureHeight()/2; 
+        float hw = tex.getTextureWidth()/4; 
+        float hh = tex.getTextureHeight()/4; 
 
         Vector2f _texPosUpLeft = new Vector2f(0, 0);
         Vector2f _texPosDownRight = new Vector2f(_texPosUpLeft.x + hw, _texPosUpLeft.y + hh);
@@ -264,7 +273,6 @@ public class GameLoopText {
           
           //Send texel data to OpenGL
           glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, image.getWidth(), image.getHeight(), 0, GL_RGBA, GL_UNSIGNED_BYTE, buffer);
-        
           //Return the texture ID so we can bind it later again
         return textureID;
      }
@@ -288,7 +296,9 @@ public class GameLoopText {
     
     public void showstats(){
     	stats.clear();
-        stats.println("World: "+dlistGPS.length); 
+        stats.println("World: "+dlistGPS.length);
+        stats.println("Found Material "+foundMaterial+" direction: "+dir+ " hit: "+hit+" @ "+foundMaterialPos.toSString());
+        stats.println("HowILook: "+HowILook);
         stats.println("FPS: "+fps);
         stats.println("Looptime: "+elapsedTime);
         stats.println("Render3D: "+render3d);
@@ -301,16 +311,16 @@ public class GameLoopText {
         stats.println("Below me: "+(belowThis(position)));
         stats.println("RAM used: "+ramUsed+" free: "+ramFree+" total: "+ramTotal);
         stats.println("X: "+lookAtGPS.getX()+" Y: "+lookAtGPS.getY()+" Z: "+lookAtGPS.getZ()+ " M: "+lookAtMaterial+" F: "+lookAtMaterialFound);
-        stats.println("Disrance: "+lookAtDistance);
+        stats.println("Distance: "+lookAtDistance);
         stats.println("radx: "+radx+" rady: "+rady+" radz; "+radz);
         stats.println("difx: "+diffx+" dify: "+diffy+" difz: "+diffz+" t: "+difft);
+        stats.println("distx: "+distx+" disty: "+disty+" distz: "+distz);
+        stats.println("dlistGPS.length:"+dlistGPS.length);
     }
     
     public void simpletext(){
     	
-    	//BufferedImage 
-//    	test = new BufferedImage(400, 400, BufferedImage.TYPE_INT_ARGB);
-//    	Graphics2D g2d = test.createGraphics();
+
 
     	g2d.clearRect(0, 0, 400, 400);
     	//GL11.glColor3f(0.0f, 0.0f, 1.0f);
@@ -357,9 +367,11 @@ public class GameLoopText {
         g2d.drawString("Below me: "+(belowThis(position)), 10, 160);
         g2d.drawString("RAM used: "+ramUsed+" free: "+ramFree+" total: "+ramTotal, 10, 176);
         g2d.drawString("X: "+lookAtGPS.getX()+" Y: "+lookAtGPS.getY()+" Z: "+lookAtGPS.getZ()+ " M: "+lookAtMaterial+" F: "+lookAtMaterialFound, 10, 192);
-        g2d.drawString("Disrance: "+lookAtDistance, 10, 208);
-        g2d.drawString("radx: "+radx+" rady: "+rady+" radz; "+radz,10,224);
-        g2d.drawString("difx: "+diffx+" dify: "+diffy+" difz: "+diffz+" t: "+difft,10,240);
+        g2d.drawString("X: "+lookAtGPS2.getX()+" Y: "+lookAtGPS2.getY()+" Z: "+lookAtGPS2.getZ()+ " M: "+lookAtMaterial2+" F: "+lookAtMaterialFound2, 10, 208);
+        g2d.drawString("Distance: "+lookAtDistance, 10, 224);
+        g2d.drawString("radx: "+radx+" rady: "+rady+" radz; "+radz,10,240);
+        
+        g2d.drawString("difx: "+diffx+" dify: "+diffy+" difz: "+diffz+" t: "+difft,10,256);
 
         int textureID = loadTexture(test); // <---- This stupid call takes 17ms
 		render2dd = (Sys.getTime()-time);
@@ -443,66 +455,79 @@ public class GameLoopText {
     public void drawWireframe(GPS a) {
     	drawVoxel(new Vector3f(a.getX(), a.getY(),a.getZ()));
     }
+    public void drawWireframeIndex(GPS a, float index) {
+    	drawVoxelIndex(new Vector3f(a.getX(), a.getY(),a.getZ()),index);
+    }
     
-    public void drawVoxel(Vector3f a) { 
+    public void drawVoxel(Vector3f a){
+    	drawVoxelIndex(a, 0.1f);
+    }
+    
+    public void drawVoxelIndex(Vector3f a, float index) { 
+    	a.setX(a.getX()-0);
     	a.setY(a.getY()+1);
-    	//a.setX(a.getX()-1);
+    	a.setZ(a.getZ()-1);
+		float indexa = index;
+		float indexb = 1-index;
+		float indexc = 1+index;
         GL11.glBegin(GL11.GL_LINES);
         GL11.glLineWidth(10.0f);
         // Top
-        GL11.glVertex3f(a.x-0.1f, a.y+0.1f, a.z+0.1f);
-        GL11.glVertex3f(a.x-0.1f, a.y+0.1f, a.z+0.9f);        
-        GL11.glVertex3f(a.x+0.9f, a.y+0.1f, a.z+0.1f);
-        GL11.glVertex3f(a.x+0.9f, a.y+0.1f, a.z+0.9f);
-        GL11.glVertex3f(a.x-0.1f, a.y+0.1f, a.z+0.1f);
-        GL11.glVertex3f(a.x+0.9f, a.y+0.1f, a.z+0.1f);
-        GL11.glVertex3f(a.x-0.1f, a.y+0.1f, a.z+0.9f);
-        GL11.glVertex3f(a.x+0.9f, a.y+0.1f, a.z+0.9f);
+
+
+		GL11.glVertex3f(a.x-indexa, a.y+indexa, a.z+indexa);
+        GL11.glVertex3f(a.x-indexa, a.y+indexa, a.z+indexb);        
+        GL11.glVertex3f(a.x+indexb, a.y+indexa, a.z+indexa);
+        GL11.glVertex3f(a.x+indexb, a.y+indexa, a.z+indexb);
+        GL11.glVertex3f(a.x-indexa, a.y+indexa, a.z+indexa);
+        GL11.glVertex3f(a.x+indexb, a.y+indexa, a.z+indexa);
+        GL11.glVertex3f(a.x-indexa, a.y+indexa, a.z+indexb);
+        GL11.glVertex3f(a.x+indexb, a.y+indexa, a.z+indexb);
         // Bottom
-        GL11.glVertex3f(a.x+0.1f, a.y-1.1f, a.z+0.1f);
-        GL11.glVertex3f(a.x+0.1f, a.y-1.1f, a.z+0.9f);        
-        GL11.glVertex3f(a.x+0.9f, a.y-1.1f, a.z+0.1f);
-        GL11.glVertex3f(a.x+0.9f, a.y-1.1f, a.z+0.9f);
-        GL11.glVertex3f(a.x+0.1f, a.y-1.1f, a.z+0.1f);
-        GL11.glVertex3f(a.x+0.9f, a.y-1.1f, a.z+0.1f);
-        GL11.glVertex3f(a.x+0.1f, a.y-1.1f, a.z+0.9f);
-        GL11.glVertex3f(a.x+0.9f, a.y-1.1f, a.z+0.9f);
+        GL11.glVertex3f(a.x+indexa, a.y-indexc, a.z+indexa);
+        GL11.glVertex3f(a.x+indexa, a.y-indexc, a.z+indexb);        
+        GL11.glVertex3f(a.x+indexb, a.y-indexc, a.z+indexa);
+        GL11.glVertex3f(a.x+indexb, a.y-indexc, a.z+indexb);
+        GL11.glVertex3f(a.x+indexa, a.y-indexc, a.z+indexa);
+        GL11.glVertex3f(a.x+indexb, a.y-indexc, a.z+indexa);
+        GL11.glVertex3f(a.x+indexa, a.y-indexc, a.z+indexb);
+        GL11.glVertex3f(a.x+indexb, a.y-indexc, a.z+indexb);
         // Side ?
-        GL11.glVertex3f(a.x-0.1f, a.y-0.1f, a.z+0.1f);
-        GL11.glVertex3f(a.x-0.1f, a.y-0.1f, a.z+0.9f);        
-        GL11.glVertex3f(a.x-0.1f, a.y-0.9f, a.z+0.1f);
-        GL11.glVertex3f(a.x-0.1f, a.y-0.9f, a.z+0.9f);
-        GL11.glVertex3f(a.x-0.1f, a.y-0.1f, a.z+0.1f);
-        GL11.glVertex3f(a.x-0.1f, a.y-0.9f, a.z+0.1f);
-        GL11.glVertex3f(a.x-0.1f, a.y-0.1f, a.z+0.9f);
-        GL11.glVertex3f(a.x-0.1f, a.y-0.9f, a.z+0.9f);
+        GL11.glVertex3f(a.x-indexa, a.y-indexa, a.z+indexa);
+        GL11.glVertex3f(a.x-indexa, a.y-indexa, a.z+indexb);        
+        GL11.glVertex3f(a.x-indexa, a.y-indexb, a.z+indexa);
+        GL11.glVertex3f(a.x-indexa, a.y-indexb, a.z+indexb);
+        GL11.glVertex3f(a.x-indexa, a.y-indexa, a.z+indexa);
+        GL11.glVertex3f(a.x-indexa, a.y-indexb, a.z+indexa);
+        GL11.glVertex3f(a.x-indexa, a.y-indexa, a.z+indexb);
+        GL11.glVertex3f(a.x-indexa, a.y-indexb, a.z+indexb);
         // Side ?
-        GL11.glVertex3f(a.x+1.1f, a.y-0.1f, a.z+0.1f);
-        GL11.glVertex3f(a.x+1.1f, a.y-0.1f, a.z+0.9f);        
-        GL11.glVertex3f(a.x+1.1f, a.y-0.9f, a.z+0.1f);
-        GL11.glVertex3f(a.x+1.1f, a.y-0.9f, a.z+0.9f);
-        GL11.glVertex3f(a.x+1.1f, a.y-0.1f, a.z+0.1f);
-        GL11.glVertex3f(a.x+1.1f, a.y-0.9f, a.z+0.1f);
-        GL11.glVertex3f(a.x+1.1f, a.y-0.1f, a.z+0.9f);
-        GL11.glVertex3f(a.x+1.1f, a.y-0.9f, a.z+0.9f);
+        GL11.glVertex3f(a.x+indexc, a.y-indexa, a.z+indexa);
+        GL11.glVertex3f(a.x+indexc, a.y-indexa, a.z+indexb);        
+        GL11.glVertex3f(a.x+indexc, a.y-indexb, a.z+indexa);
+        GL11.glVertex3f(a.x+indexc, a.y-indexb, a.z+indexb);
+        GL11.glVertex3f(a.x+indexc, a.y-indexa, a.z+indexa);
+        GL11.glVertex3f(a.x+indexc, a.y-indexb, a.z+indexa);
+        GL11.glVertex3f(a.x+indexc, a.y-indexa, a.z+indexb);
+        GL11.glVertex3f(a.x+indexc, a.y-indexb, a.z+indexb);
         // Front
-        GL11.glVertex3f(a.x+0.1f, a.y-0.1f, a.z-0.1f);
-        GL11.glVertex3f(a.x+0.9f, a.y-0.1f, a.z-0.1f);        
-        GL11.glVertex3f(a.x+0.1f, a.y-0.9f, a.z-0.1f);
-        GL11.glVertex3f(a.x+0.9f, a.y-0.9f, a.z-0.1f);
-        GL11.glVertex3f(a.x+0.1f, a.y-0.1f, a.z-0.1f);
-        GL11.glVertex3f(a.x+0.1f, a.y-0.9f, a.z-0.1f);
-        GL11.glVertex3f(a.x+0.9f, a.y-0.1f, a.z-0.1f);
-        GL11.glVertex3f(a.x+0.9f, a.y-0.9f, a.z-0.1f);
+        GL11.glVertex3f(a.x+indexa, a.y-indexa, a.z-indexa);
+        GL11.glVertex3f(a.x+indexb, a.y-indexa, a.z-indexa);        
+        GL11.glVertex3f(a.x+indexa, a.y-indexb, a.z-indexa);
+        GL11.glVertex3f(a.x+indexb, a.y-indexb, a.z-indexa);
+        GL11.glVertex3f(a.x+indexa, a.y-indexa, a.z-indexa);
+        GL11.glVertex3f(a.x+indexa, a.y-indexb, a.z-indexa);
+        GL11.glVertex3f(a.x+indexb, a.y-indexa, a.z-indexa);
+        GL11.glVertex3f(a.x+indexb, a.y-indexb, a.z-indexa);
         // Back
-        GL11.glVertex3f(a.x+0.1f, a.y-0.1f, a.z+1.1f);
-        GL11.glVertex3f(a.x+0.9f, a.y-0.1f, a.z+1.1f);        
-        GL11.glVertex3f(a.x+0.1f, a.y-0.9f, a.z+1.1f);
-        GL11.glVertex3f(a.x+0.9f, a.y-0.9f, a.z+1.1f);
-        GL11.glVertex3f(a.x+0.1f, a.y-0.1f, a.z+1.1f);
-        GL11.glVertex3f(a.x+0.1f, a.y-0.9f, a.z+1.1f);
-        GL11.glVertex3f(a.x+0.9f, a.y-0.1f, a.z+1.1f);
-        GL11.glVertex3f(a.x+0.9f, a.y-0.9f, a.z+1.1f);      
+        GL11.glVertex3f(a.x+indexa, a.y-indexa, a.z+indexc);
+        GL11.glVertex3f(a.x+indexb, a.y-indexa, a.z+indexc);        
+        GL11.glVertex3f(a.x+indexa, a.y-indexb, a.z+indexc);
+        GL11.glVertex3f(a.x+indexb, a.y-indexb, a.z+indexc);
+        GL11.glVertex3f(a.x+indexa, a.y-indexa, a.z+indexc);
+        GL11.glVertex3f(a.x+indexa, a.y-indexb, a.z+indexc);
+        GL11.glVertex3f(a.x+indexb, a.y-indexa, a.z+indexc);
+        GL11.glVertex3f(a.x+indexb, a.y-indexb, a.z+indexc); 
         GL11.glEnd();
     }
     
@@ -515,104 +540,116 @@ public class GameLoopText {
         GL11.glEnd();
     }
     
-    public void lookAt(){
-    	lookAtMaterialFound = false;
-    	lookAtVoxel.x=position.x;
-    	lookAtVoxel.y=position.y;
-    	lookAtVoxel.z=position.z;
-    	radx = (float)Math.sin(Math.toRadians(yaw));
-    	radz = (float)Math.cos(Math.toRadians(yaw));
+    public  void lookAt(Vector3f gps, int maxDistance){
+    	addX=0;
+    	addY=0;
+    	addZ=0;
+    	HowILook="";
+    	lookAtMaterialFound=false;
+    	foundMaterial = -1;
+    	HowILook=HowILook+"["+(int)gps.getX()+"]["+(int)gps.getZ()+"]["+(int)gps.getY()+"] "; 
+    	dir = "unknown";
+    	hit = "";
+    	// Calculate speed in x,z and y direction
     	rady = (float)Math.sin(Math.toRadians(pitch));
-    	diffx = radx - (lookAtVoxel.x % 1);
-    	diffz = radz - (lookAtVoxel.z % 1);
-    	diffy = rady - (lookAtVoxel.y % 1);
-    	difft = diffx+diffy+diffz;
-    	for(lookAtDistance=0; lookAtDistance<5; lookAtDistance++){
-    		lookAtVoxel.x+=radx;
-    		lookAtVoxel.y-=rady;
-    		lookAtVoxel.z-=radz;
-    		lookAtGPS.setGPSRound(lookAtVoxel);
-    		lookAtMaterial = world.getVoxel(lookAtGPS);
-    		if (lookAtMaterial != Material.m_air){
-    			// This voxel within viewing distance is not air
-    			//TODO figure out which side of the voxel I look at
-    			//TODO figure out how to draw a colorful square to mark this voxel side
+    	radx = (float)Math.sin(Math.toRadians(yaw))*(float)(Math.cos(Math.toRadians(pitch)));
+    	radz = (float)Math.cos(Math.toRadians(yaw))*(float)(Math.cos(Math.toRadians(pitch)));
+    	do {
+	    	// Calculate distance to next x,z and y depending on gps and speed
+	    	if (radx < 0)	{distx = ((gps.x % 1)-addX)/radx;}					// west 
+	    	else 			{distx = ((1-(gps.x % 1))+addX)/radx;}				// east
+	    	if (rady < 0)	{disty = ((gps.y % 1)+addY)/rady;}					// up
+	    	else 			{disty = ((1-(gps.y % 1))-addY)/rady;}				// down
+	    	if (radz < 0)	{distz = ((gps.z % 1)-addZ)/radz;}					// south
+	    	else 			{distz = ((-1-(gps.z % 1))+addZ)/radz;}				// north
+	    	// Calculate shortest distance
+	    	if(Math.abs(distx)<Math.abs(disty) && Math.abs(distx)<Math.abs(distz)){
+				if(yaw<=180){ dir="east"; 	addX++;  hit="left  "; }
+				else 		{ dir="west"; 	addX--;  hit="right ";  }
+	    	}else if(Math.abs(disty)<Math.abs(distz) && Math.abs(disty)<Math.abs(distx)){
+				if(pitch<0)	{ dir="up"; 	addY++;  hit="botto ";  }
+				else 		{ dir="down"; 	addY--;  hit="top   ";  }    	
+			}else{
+				if((yaw>270)||(yaw<90))	{ dir="north"; 	addZ--;  hit="front "; }
+				else 		{ dir="south"; 	addZ++; hit="Back  "; }
+	    	}
+	    	foundMaterialPos.setWestEast((long)gps.x+addX);
+	    	foundMaterialPos.setSouthNorth((long)gps.z+addZ);
+	    	foundMaterialPos.setUpDown((long)gps.y+addY);
+	    	//HowILook=HowILook+dir+foundMaterialPos.toMString();
+	    	GL11.glColor3f(1.0f, 1.0f, 1.0f);
+	    	drawWireframeIndex(foundMaterialPos,0f);
+    		if (world.getVoxel(foundMaterialPos) != Material.m_air){
+    			foundMaterial=world.getVoxel(foundMaterialPos);
     			lookAtMaterialFound=true;
     			break;
     		}
-    	}
+    	} while (Math.abs(addX)<maxDistance && Math.abs(addY)<maxDistance && Math.abs(addZ)<maxDistance);
     }
     
-    public GPS lookAt2(){
-    	lookAtMaterialFound = false;
-    	lookAtGPS.setGPSRound(lookAtVoxel);
-    	radx = (float)Math.sin(Math.toRadians(yaw));		
-    	radz = (float)Math.cos(Math.toRadians(yaw));
+    /**
+     * detectCollision takes current position and distance as input.
+     * It loops through every intermediate Voxel between start and stop.
+     * If a solid Voxel in the path is found, it returns the position immediately
+     * before the solid Voxel.
+     * @param startPos
+     * @param endPos
+     * @return
+     */
+    public void detectCollision( float distance){
+    	addX=0;
+    	addY=0;
+    	addZ=0;
+    	HowILook="";
+    	lookAtMaterialFound=false;
+    	foundMaterial = -1;
+    	float totalDistance=0;
+    	Vector3f newPosition=new Vector3f(position);
+    	Vector3f lookAtPos = new Vector3f();
+    	HowILook=HowILook+"["+(int)position.getX()+"]["+(int)position.getZ()+"]["+(int)position.getY()+"] "; 
+    	dir = "unknown";
+    	hit = "";
+    	// Calculate speed in x,z and y direction
     	rady = (float)Math.sin(Math.toRadians(pitch));
-    	float x1 = position.x;
-    	float y1 = position.y;
-    	float z1 = position.z;
-    	float x2 = x1+radx;								
-    	float y2 = y1-rady;
-    	float z2 = z1-radz;
-    	float x1frac = x1%1;
-    	float y1frac = y1%1;
-    	float z1frac = z1%1;
-    	float x2frac = x2%1;
-    	float y2frac = y2%1;
-    	float z2frac = z2%1;
-//    	if(((int)x2>(int)x1) && ((int)z2>(int)z1) ){  // Direction 0-90 degrees
-//    		if ( ((1-x1frac)/((1-x1frac)+(x2frac))) > ( (1-y1frac)/( (1-y1frac)+y2frac) ) ) {
-//    			if ( world.getVoxel(x1+1,y1,z1).isSolid ){ return(new GPS(x1+1,y1,z1));}			
-//    		}
-//    		else if ( world.getVoxel(x1,y1+1,z1).isSolid ){ return(x1,y1+1,z1);}
-//    		
-//    	}
-    	
-    	
-    	
-    	
-    	
-//    	diffx = radx - (lookAtVoxel.x % 1);
-//    	diffz = radz - (lookAtVoxel.z % 1);
-//    	diffy = rady - (lookAtVoxel.y % 1);
-//    	difft = diffx+diffy+diffz;
-    	
-      	for(lookAtDistance=0; lookAtDistance<5; lookAtDistance++){
-      		if((lookAtVoxel.x % 1)+radx > 1.0f){
-      			
-      			
-      			
-      			
-      			
-      			
-      		}
-      			lookAtGPS.east();
-      			lookAtMaterial = world.getVoxel(lookAtGPS);
-      			if (lookAtMaterial != Material.m_air){
-        			lookAtMaterialFound=true;
-        			break;
-      		}
-    		
-    		
-    		
-    		lookAtVoxel.x+=radx;
-    		lookAtVoxel.y-=rady;
-    		lookAtVoxel.z-=radz;
-    		
-    		
-    		lookAtGPS.setGPSRound(lookAtVoxel);
-    		lookAtMaterial = world.getVoxel(lookAtGPS);
-    		if (lookAtMaterial != Material.m_air){
-    			// This voxel within viewing distance is not air
-    			//TODO figure out which side of the voxel I look at
-    			//TODO figure out how to draw a colorful square to mark this voxel side
+    	radx = (float)Math.sin(Math.toRadians(yaw))*(float)(Math.cos(Math.toRadians(pitch)));
+    	radz = (float)Math.cos(Math.toRadians(yaw))*(float)(Math.cos(Math.toRadians(pitch)));
+    	do {
+	    	// Calculate distance to next x,z and y depending on gps and speed
+	    	if (radx < 0)	{distx = ((position.x % 1)-addX)/radx;}					// west 
+	    	else 			{distx = ((1-(position.x % 1))+addX)/radx;}				// east
+	    	if (rady < 0)	{disty = ((position.y % 1)+addY)/rady;}					// up
+	    	else 			{disty = ((1-(position.y % 1))-addY)/rady;}				// down
+	    	if (radz < 0)	{distz = ((position.z)-addZ)/radz;}						// south
+	    	else 			{distz = ((-1-(position.z % 1))+addZ)/radz;}			// north
+	    	// Calculate shortest distance
+	    	if(Math.abs(distx)<Math.abs(disty) && Math.abs(distx)<Math.abs(distz)){
+	    		totalDistance=distz;
+				if(yaw<=180){ dir="east"; 	addX++;  hit="left  "; }
+				else 		{ dir="west"; 	addX--;  hit="right ";  }
+	    	}else if(Math.abs(disty)<Math.abs(distz) && Math.abs(disty)<Math.abs(distx)){
+	    		totalDistance=distx;
+				if(pitch<0)	{ dir="up"; 	addY++;  hit="botto ";  }
+				else 		{ dir="down"; 	addY--;  hit="top   ";  }    	
+			}else{
+	    		totalDistance=disty;
+				if((yaw>270)||(yaw<90))	{ dir="north"; 	addZ--;  hit="front "; }
+				else 		{ dir="south"; 	addZ++; hit="Back  "; }
+	    	}
+	    	lookAtPos.setX(position.x+addX);
+	    	lookAtPos.setZ(position.z+addZ);
+	    	lookAtPos.setY(position.y+addY);
+	    	//HowILook=HowILook+dir+lookAtPos.toMString();
+    		if (world.getVoxel(lookAtPos) != Material.m_air){
+    			foundMaterial=world.getVoxel(lookAtPos);
     			lookAtMaterialFound=true;
+    			position.set(newPosition.getX(), newPosition.getY(), newPosition.getZ());
     			break;
     		}
-    	}
-      	return(new GPS(x1+1,y1,z1));
+    		newPosition = lookAtPos;
+    	} while (totalDistance<=distance);
+    	position.set(newPosition.getX(), newPosition.getY(), newPosition.getZ());
     }
+    
     
     public void run(boolean fullscreen) {
         this.fullscreen = fullscreen;
@@ -634,27 +671,28 @@ public class GameLoopText {
             while (!done) {
             	time = Sys.getTime();
             	elapsedTime = ((time - time2));
-            	lookAt();
-            	
             	// Render
             	clearRenderer();
             	// Render 3D Display Lists
                 initGL3D();
+            	//lookAt();
+            	lookAt(position,6);
+            	
+            	
             	for(int i=0; i<dlistGPS.length; i++){
         			GL11.glLoadIdentity(); // Reset The Current Modelview Matrix
+        			System.out.println("lookThrough ["+i+"] "+dlistGPS[i].getDlGPS().toSString());
         	        lookThrough(dlistGPS[i].getDlGPS());
+        	        System.out.println("glCallList: "+i);
         	        glCallList(dlistGPS[i].getDisplayList());
             	}
-            	GL11.glColor3f(1.0f, 1.0f, 0.0f);
-            	drawVoxel(lookAtVoxel);
-//            	GL11.glColor3f(0.0f, 0.0f, 1.0f);
             	if(lookAtMaterialFound) {
             		GL11.glColor3f(1.0f, 0.0f, 0.0f);
-                	drawWireframe(lookAtGPS);
+                	drawWireframeIndex(foundMaterialPos,0.02f);
             	}
             	else {
             		GL11.glColor3f(0.6f, 0.6f, 0.6f);
-                	drawWireframe(lookAtGPS);
+                	drawWireframe(foundMaterialPos);
             	}
         		//drawLine(lookAtVoxel);
             	render3d = (Sys.getTime()-time);
@@ -669,32 +707,35 @@ public class GameLoopText {
     			showstats();
     			render2db = (Sys.getTime()-time);
             	//glCallList(inventorydisplaylist);
-            	GL11.glLoadIdentity(); // Reset The Current Modelview Matrix
+            	//GL11.glLoadIdentity(); // Reset The Current Modelview Matrix
 
             	//renderInventory();
             	//GL11.glLoadIdentity(); // Reset The Current Modelview Matrix
             	//renderTexture(textureInventoryHUD.getTexture(),hudPos.DownRight);
 
-            	render2dc = (Sys.getTime()-time);
 
             	endGL2D();
+
             	time2=time;
-            	//sleep(1000);
                 mainloop(elapsedTime);
-                //Display.setTitle("MyCraft  FPS: "+elapsedTime);
+
                 fps++;
                 if(time2>seconds){
                 	seconds=time2+1000;
                 	this.fps=fps;
-                    //Display.setTitle("MyCraft  FPS: "+fps+" looptime: "+elapsedTime+" display: "+VIEWs[what2display]+" the other...");                	
                     fps=0;
                     ramTotal = Runtime.getRuntime().totalMemory()/1024;    
                     ramFree=Runtime.getRuntime().freeMemory()/1024;
                     ramUsed=ramTotal-ramFree;
                 }
+
                 Keyboard.poll();
+
                 Display.processMessages();
+
                 Display.swapBuffers();
+            	render2dc = (Sys.getTime()-time);
+
             }
             cleanup();
         }
@@ -836,29 +877,25 @@ public class GameLoopText {
   //moves the camera forward relative to its current rotation (yaw)
     public void walkForward(float distance)
     {
-        position2.setX(position.getX() + (distance * (float)Math.sin(Math.toRadians(yaw))));
-        position2.setZ(position.getZ() - (distance * (float)Math.cos(Math.toRadians(yaw))));
+    	//detectCollision(distance);
+        position2.setX(position.x += distance * (float)Math.sin(Math.toRadians(yaw)));
+        position2.setZ(position.z -= distance * (float)Math.cos(Math.toRadians(yaw)));
         position2.setY(position.getY());
-        //msg("P2x: "+position2.x+" P2y: "+position2.y+" P2z: "+position2.z+" sin: "+(distance * (float)Math.sin(Math.toRadians(yaw)))+" cos: "+(float)Math.cos(Math.toRadians(yaw))+" yaw: "+yaw+" distance: "+distance);
         position = collisionDetect(position2,2);
-    }
-    
-
-     
+        
+    }     
     //moves the camera backward relative to its current rotation (yaw)
     public void walkBackwards(float distance)
     {
         position.x -= distance * (float)Math.sin(Math.toRadians(yaw));
         position.z += distance * (float)Math.cos(Math.toRadians(yaw));
     }
-     
-    //strafes the camera left relitive to its current rotation (yaw)
+         //strafes the camera left relitive to its current rotation (yaw)
     public void strafeLeft(float distance)
     {
         position.x += distance * (float)Math.sin(Math.toRadians(yaw-90));
         position.z -= distance * (float)Math.cos(Math.toRadians(yaw-90));
-    }
-     
+    }     
     //strafes the camera right relitive to its current rotation (yaw)
     public void strafeRight(float distance)
     {
@@ -909,7 +946,7 @@ public class GameLoopText {
         }
         lastused=99;
         distance = (walkSpeed * elapsedTime)/1000;
-        if (distance>0.9f){ msg("Distance exceeded : "+distance); distance = 0.9f; }
+        //if (distance>0.9f){ msg("Distance exceeded : "+distance); distance = 0.9f; }
         if((Keyboard.isKeyDown(Keyboard.KEY_D))&& (lastused!=1)){ strafeRight((walkSpeed * elapsedTime)/1000); lastused=1;}
         if((Keyboard.isKeyDown(Keyboard.KEY_Q))&& (lastused!=2)){ position.y+=((walkSpeed * elapsedTime)/1000); lastused=2; }
         if((Keyboard.isKeyDown(Keyboard.KEY_S))&& (lastused!=3)){ walkBackwards((walkSpeed * elapsedTime)/1000); lastused=3; }
@@ -934,7 +971,7 @@ public class GameLoopText {
         }
         if((Keyboard.isKeyDown(Keyboard.KEY_I))&& (lastused!=98)){ 
         	// Print info regarding anything:
-            msg("X:"+position.x+" Y:"+position.y+" Z:"+position.z+" walkspeed: "+walkSpeed+" elapsed: "+elapsedTime+" movement: "+((walkSpeed * elapsedTime)/1000)+" yaw:"+yaw+" pitch:"+pitch);	
+            //msg("X:"+position.x+" Y:"+position.y+" Z:"+position.z+" walkspeed: "+walkSpeed+" elapsed: "+elapsedTime+" movement: "+((walkSpeed * elapsedTime)/1000)+" yaw:"+yaw+" pitch:"+pitch);	
 
         	lastused=98; 
         }
@@ -949,7 +986,7 @@ public class GameLoopText {
         if (yaw>360){yaw-=360;}
         if (yaw<0){yaw+=360;}
         
-        //controll camera pitch from y movement fromt the mouse
+        //controll camera pitch from y movement from the mouse
         pitch-=(dy * mouseSensitivity);
         if (pitch>90){pitch=90;}
         if (pitch<-90){pitch=-90;}
@@ -996,28 +1033,30 @@ public class GameLoopText {
     //this dose basic what gluLookAt() does
     public void lookThrough(GPS gps)
     {
-        //roatate the pitch around the X axis
+        //rotate the pitch around the X axis
         GL11.glRotatef(pitch, 1.0f, 0.0f, 0.0f);
         //roatate the yaw around the Y axis
         GL11.glRotatef(yaw, 0.0f, 1.0f, 0.0f);
-        //translate to the position vector's location
+        // translate to the position vector's location
         // gps contains the GPS position of a displaylist
         // position contains the position of the player
-        GL11.glTranslatef(0-position.x+gps.getWestEast(), 0-position.y+gps.getUpDown(), 0-position.z+gps.getSouthNorth());
-        //msg("x"+(0-position.x+gps.getWestEast())+"y"+ (0-position.y+gps.getUpDown())+"z"+ (0-position.z+gps.getSouthNorth()));
+        ltx=0-position.x+gps.getWestEast();
+        lty=0-position.y+gps.getUpDown();
+        ltz=0-position.z+gps.getSouthNorth();
+        GL11.glTranslatef(ltx,lty,ltz);
+        System.out.println("x: "+ltx+" y: "+lty+" z: "+ltz);
     }
 
 	private void clearRenderer(){
         GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT); // Clear The Screen And The Depth Buffer
-        
+        GL11.glMatrixMode(GL11.GL_PROJECTION); // Select The Projection Matrix        
+        GL11.glLoadIdentity(); // Reset The Projection Matrix
+        GLU.gluPerspective(45.0f, (float) displayMode.getWidth() / (float) displayMode.getHeight(), 0.1f, 1000.0f);
+        GL11.glMatrixMode(GL11.GL_MODELVIEW); // Select The Modelview Matrix  
+        GL11.glTranslatef(0.0f,0.0f,-5.0f);
 	}
 	 
-//		private void Renderer(GPS gps){
-//			GL11.glLoadIdentity(); // Reset The Current Modelview Matrix
-//	        lookThrough(gps);
-//	        int dlist = world.getChunk(gps).getDisplayList();
-//	        glCallList(world.getChunk(gps).getDisplayList());
-//		}
+
 	 
 	 
 	 
@@ -1065,7 +1104,18 @@ public class GameLoopText {
 		return bimg;
 	}
 
-
+    private void PhysicsObject(float dt)
+    {
+//        Vector3d acceleration = m_force + (m_gravityDirection * 9.81f);
+//        m_velocity += acceleration * dt;
+//        m_position += m_velocity * dt;
+//
+//        m_angularVelocity += m_angularAcceleration * dt;
+//        m_rotation += m_angularVelocity * dt;
+//
+//        // Reset force variable every frame
+//        m_force = Vector3d(0.0f, 0.0f, 0.0f);
+    }
 
     private void init() throws Exception {
         createWindow();
@@ -1110,38 +1160,19 @@ public class GameLoopText {
         glMatrixMode(GL_MODELVIEW);
     }
 
+    /**
+     * Initialize OpenGL once before game loop
+     */
     private void initGL3D() {
         GL11.glEnable(GL11.GL_TEXTURE_2D); // Enable Texture Mapping
         GL11.glShadeModel(GL11.GL_SMOOTH); // Enable Smooth Shading
-        GL11.glClearColor(0.0f, 0.0f, 0.0f, 0.0f); // Black Background
+        GL11.glClearColor(0.0f, 0.0f, 0.0f, 0.5f); // Black Background
         GL11.glClearDepth(1.0f); // Depth Buffer Setup
         GL11.glEnable(GL11.GL_DEPTH_TEST); // Enables Depth Testing
         GL11.glDepthFunc(GL11.GL_LEQUAL); // The Type Of Depth Testing To Do
-        GL11.glMatrixMode(GL11.GL_PROJECTION); // Select The Projection Matrix
-        GL11.glLoadIdentity(); // Reset The Projection Matrix
-        //GL11.glOrtho(0, displayMode.getWidth(), displayMode.getHeight(), 0, 1000, -1000);
-        // Calculate The Aspect Ratio Of The Window
-        GLU.gluPerspective(45.0f, (float) displayMode.getWidth() / (float) displayMode.getHeight(), 0.1f, 1000.0f);
-        GL11.glMatrixMode(GL11.GL_MODELVIEW); // Select The Modelview Matrix
-        // Really Nice Perspective Calculations
         GL11.glHint(GL11.GL_PERSPECTIVE_CORRECTION_HINT, GL11.GL_NICEST);
-      //----------- Variables & method calls added for Lighting Test -----------//
-//      		initLightArrays();
-//      		glShadeModel(GL_SMOOTH);
-//      		glMaterial(GL_FRONT, GL_SPECULAR, matSpecular);				// sets specular material color
-//      		glMaterialf(GL_FRONT, GL_SHININESS, 50.0f);					// sets shininess
-//      		
-//      		glLight(GL_LIGHT0, GL_POSITION, lightPosition);				// sets light position
-//      		glLight(GL_LIGHT0, GL_SPECULAR, whiteLight);				// sets specular light to white
-//      		glLight(GL_LIGHT0, GL_DIFFUSE, whiteLight);					// sets diffuse light to white
-//      		glLightModel(GL_LIGHT_MODEL_AMBIENT, lModelAmbient);		// global ambient light 
-//      		
-//      		glEnable(GL_LIGHTING);										// enables lighting
-//      		glEnable(GL_LIGHT0);										// enables light0
-//      		
-//      		glEnable(GL_COLOR_MATERIAL);								// enables opengl to use glColor3f to define material color
-//      		glColorMaterial(GL_FRONT, GL_AMBIENT_AND_DIFFUSE);			// tell opengl glColor3f effects the ambient and diffuse properties of material
-//      		//----------- END: Variables & method calls added for Lighting Test -----------//
+		glEnable(GL_CULL_FACE);    	
+		glCullFace(GL_BACK);
       	}
       	
 

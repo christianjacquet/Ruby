@@ -2,10 +2,10 @@ package com.digitalemu.world;
 
 import org.lwjgl.util.vector.Vector3f;
 
-public class GPS {
-	long westEast;
-	long northSouth;
-	long upDown;
+public class GPS{
+	long westEast;		// West  = -	East  = +
+	long northSouth;	// North = - 	South = + 
+	long upDown;		// Up    = +    Down  = -
 	
 	public GPS(){
 		this.westEast=0;
@@ -23,6 +23,12 @@ public class GPS {
 		this.westEast=(long) westEast;
 		this.northSouth=(long) southNorth;
 		this.upDown=(long) upDown;
+	}
+	
+	public GPS(Vector3f vector){
+		this.westEast=(long)vector.x;
+		this.upDown=(long)vector.y;
+		this.northSouth=(long)vector.z;
 	}
 	
 	public long getX(){
@@ -50,7 +56,7 @@ public class GPS {
 	}
 	
 	public void setWestEast(long val){
-		this.northSouth=val;
+		this.westEast=val;
 	}
 	
 	public void setSouthNorth(long val){
@@ -62,27 +68,34 @@ public class GPS {
 	}
 	
 	public void up(){
-		this.northSouth++;
+		this.upDown++;
 	}
 
 	public void down(){
-		this.northSouth--;
+		this.upDown--;
 	}	
 		
 	public void east(){
-		this.westEast--;
-	}
-	
-	public void west(){
 		this.westEast++;
 	}
 	
+	public void west(){
+		this.westEast--;
+	}
+	
 	public void north(){
-		this.upDown++;
+		this.northSouth--;
 	}
 	
 	public void south(){
-		this.upDown--;	
+		this.northSouth++;	
+	}
+	
+	public GPS vector3f2GPS(Vector3f vector){
+		this.northSouth=(long)vector.z;
+		this.upDown=(long)vector.y;
+		this.westEast=(long)vector.x;
+	return this;	
 	}
 	
 	public void setGPS(GPS gps){
@@ -114,6 +127,10 @@ public class GPS {
 	// output: "x32y44z789
 	public String gps2str(){
 		return "x"+Long.toString(this.westEast)+"y"+Long.toString(this.upDown)+"z"+Long.toString(this.northSouth);
+	}
+	
+	public String toMString(){
+		return "["+this.westEast+"]["+this.northSouth+"]["+this.upDown+"]";
 	}
 	
 	public String toSString(){

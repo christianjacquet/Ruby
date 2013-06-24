@@ -38,14 +38,15 @@ public class World {
 		GPS tgps;
 		this.worldBaseInRam=worldBaseInRam;
 		this.chunkBase=chunkBase;
-		this.mapRadius = (worldBaseInRam*chunkBase/2)-1;
-		msg("Radius:"+mapRadius);
-		this.centerOfMap = new GPS(mapRadius,mapRadius,mapRadius);
+//		this.mapRadius = (worldBaseInRam*chunkBase/2)-1;          // not using this now
+//		msg("Radius:"+mapRadius);
+//		this.centerOfMap = new GPS(mapRadius,mapRadius,mapRadius);
 		this.chunk = new Chunk3[this.worldBaseInRam][this.worldBaseInRam][this.worldBaseInRam];
 		this.dListGps = new DlistGps[worldBaseInRam*worldBaseInRam*worldBaseInRam];
 		int chunkRadius=worldBaseInRam/2;
 		for(int x=0; x<this.worldBaseInRam; x++){
-			for(int y=0; y<this.worldBaseInRam; y++){
+			for(int y=0; y<this.worldBaseInRam; y++){ // not using chunks in Y now
+
 				for(int z=0; z<this.worldBaseInRam; z++){
 					tgps = new GPS(((x-chunkRadius)*chunkBase),((y-chunkRadius)*chunkBase),((z-chunkRadius)*chunkBase));
 					this.chunk[x][y][z]= new Chunk3(this.chunkBase, tgps, texture);
@@ -54,7 +55,8 @@ public class World {
 					msg(" Chunk:"+this.chunk[x][y][z]+" with gps:"+tgps.toSString()+" in chunkMap");
 					if(z==0){
 						//chunk[x][y][z].generateNormal(x+z);
-						chunk[x][y][z].generatePerlin();
+						//chunk[x][y][z].generatePerlin();
+						chunk[x][y][z].generateTestMap();
 					}
 					else {
 						chunk[x][y][z].generateNormalgrid(z+8);
@@ -128,6 +130,10 @@ public class World {
 		int ud = (int) (upDown - chunk.getGps().getUpDown());
 		//msg("GPS: "+gps.gps2str()+" Chunk: "+chunk.getGps().gps2str()+" WE: "+ew+" SN: "+sn+" UD: "+ud+" Material: "+chunk.getVoxel(ew, sn, ew));
 		return chunk.getVoxel(ew, ud, sn);
+	}
+	
+	public short getVoxel(Vector3f gps){
+		return getChunk((long)gps.getX(), (long)gps.getZ(), (long)gps.getY()).getVoxel((int)gps.getX(),(int)gps.getY(),(int)gps.getZ());
 	}
 	
 	public short getVoxel(GPS gps){

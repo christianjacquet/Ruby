@@ -40,7 +40,8 @@ public class Monitor extends JFrame {
 		add(panel);
 		pack();						// Set window size to fit components
 		setTitle(name+" @ "+Thread.currentThread().toString());
-		setLocationRelativeTo(null);
+		//setLocationRelativeTo(null);
+		setLocation(0,0);
 
 		
 		setDefaultCloseOperation(EXIT_ON_CLOSE);
