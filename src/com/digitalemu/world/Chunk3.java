@@ -543,7 +543,15 @@ public class Chunk3 {
     	return this.oglDisplayList;
     }
     
-
+//    public short getVoxel(GPS2 gps){
+//		z=0-z;
+//		try {
+//			return voxel[x][y][z];
+//		} catch (ArrayIndexOutOfBoundsException e){
+//			System.out.println("Indexoutofbounds x "+x+" y "+y+" z "+z);
+//			return Material.m_null;
+//		}
+//	}
 	
 	public short getVoxel(int x, int y, int z){
 		z=0-z;

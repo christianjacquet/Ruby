@@ -11,6 +11,8 @@ import org.newdawn.slick.opengl.Texture;
 
 //import com.digitalemu.test.GameLoopDListMax;
 import com.digitalemu.world.GPS;
+import com.digitalemu.world.GPS2;
+
 
 public class World {
 	private Chunk3[][][] chunk; 
@@ -104,6 +106,17 @@ public class World {
 		}
 	}
 	
+	public Chunk3 getChunk(GPS2 gps){
+		String s = GPS2.gps2str((gps.getGpsX()/chunkBase),(gps.getGpsZ()/chunkBase),(gps.getGpsZ()/chunkBase));
+		if (chunkMap.containsKey(s)){
+			return chunkMap.get(s);
+		}
+		else{
+			System.out.println("GPS: "+s+" not in chunkMap.");
+		return null;
+		}
+	}
+	
 	/* Find index of chunk in ram from GPS coordinates
 	 * 
 	 */
@@ -131,6 +144,10 @@ public class World {
 		//msg("GPS: "+gps.gps2str()+" Chunk: "+chunk.getGps().gps2str()+" WE: "+ew+" SN: "+sn+" UD: "+ud+" Material: "+chunk.getVoxel(ew, sn, ew));
 		return chunk.getVoxel(ew, ud, sn);
 	}
+	
+//	public short getVoxel(GPS2 gps){
+//		return getChunk(gps).getVoxel(gps);
+//	}
 	
 	public short getVoxel(Vector3f gps){
 		return getChunk((long)gps.getX(), (long)gps.getZ(), (long)gps.getY()).getVoxel((int)gps.getX(),(int)gps.getY(),(int)gps.getZ());
