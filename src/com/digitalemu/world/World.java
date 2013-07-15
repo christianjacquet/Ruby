@@ -50,7 +50,7 @@ public class World {
 			for(int y=0; y<this.worldBaseInRam; y++){ // not using chunks in Y now
 
 				for(int z=0; z<this.worldBaseInRam; z++){
-					tgps = new GPS(((x-chunkRadius)*chunkBase),((y-chunkRadius)*chunkBase),((z-chunkRadius)*chunkBase));
+					tgps = new GPS(((x-chunkRadius)*chunkBase),((y-chunkRadius)*chunkBase),((z-chunkRadius)*chunkBase),this);
 					this.chunk[x][y][z]= new Chunk3(this.chunkBase, tgps, texture);
 					msg("Storing: "+tgps.gps2str());
 					chunkMap.put(tgps.gps2str(), this.chunk[x][y][z]);
@@ -90,10 +90,10 @@ public class World {
 	 * 
 	 */
 	public Chunk3 getChunk(GPS gps){
-		GPS tgps= new GPS();
-		tgps.setSouthNorth(gps.getSouthNorth()/chunkBase);
-		tgps.setUpDown(gps.getUpDown()/chunkBase);
-		tgps.setWestEast(gps.getWestEast()/chunkBase);
+		GPS tgps= new GPS(this);
+		tgps.setLongZ(gps.getLongZ()/chunkBase);
+		tgps.setLongY(gps.getLongY()/chunkBase);
+		tgps.setLongX(gps.getLongX()/chunkBase);
 		String s = tgps.gps2str();
 		//msg("looking for: "+s);
 		if (chunkMap.containsKey(s)){
@@ -138,9 +138,9 @@ public class World {
 	
 	public short getVoxel(long westEast, long northSouth, long upDown){
 		Chunk3 chunk=getChunk(new GPS(westEast, northSouth, upDown));
-		int ew = (int) (westEast - chunk.getGps().getWestEast());
-		int sn = (int) (northSouth - chunk.getGps().getSouthNorth());
-		int ud = (int) (upDown - chunk.getGps().getUpDown());
+		int ew = (int) (westEast - chunk.getGps().getLongX());
+		int sn = (int) (northSouth - chunk.getGps().getLongZ());
+		int ud = (int) (upDown - chunk.getGps().getLongY());
 		//msg("GPS: "+gps.gps2str()+" Chunk: "+chunk.getGps().gps2str()+" WE: "+ew+" SN: "+sn+" UD: "+ud+" Material: "+chunk.getVoxel(ew, sn, ew));
 		return chunk.getVoxel(ew, ud, sn);
 	}
@@ -155,18 +155,18 @@ public class World {
 	
 	public short getVoxel(GPS gps){
 		Chunk3 chunk=getChunk(gps);
-		int ew = (int) (gps.getWestEast() - chunk.getGps().getWestEast());
-		int sn = (int) (gps.getSouthNorth() - chunk.getGps().getSouthNorth());
-		int ud = (int) (gps.getUpDown() - chunk.getGps().getUpDown());
+		int ew = (int) (gps.getLongX() - chunk.getGps().getLongX());
+		int sn = (int) (gps.getLongZ() - chunk.getGps().getLongZ());
+		int ud = (int) (gps.getLongY() - chunk.getGps().getLongY());
 		//msg("GPS: "+gps.gps2str()+" Chunk: "+chunk.getGps().gps2str()+" WE: "+ew+" SN: "+sn+" UD: "+ud+" Material: "+chunk.getVoxel(ew, sn, ew));
 		return chunk.getVoxel(ew, ud, sn);
 	}
 	
 	public void setVoxel(GPS gps, short material){
 		Chunk3 chunk=getChunk(gps);
-		int ew = (int) (gps.getWestEast() - chunk.getGps().getWestEast());
-		int sn = (int) (gps.getSouthNorth() - chunk.getGps().getSouthNorth());
-		int ud = (int) (gps.getUpDown() - chunk.getGps().getUpDown());
+		int ew = (int) (gps.getLongX() - chunk.getGps().getLongX());
+		int sn = (int) (gps.getLongZ() - chunk.getGps().getLongZ());
+		int ud = (int) (gps.getLongY() - chunk.getGps().getLongY());
 		chunk.setVoxel(ew, sn, ud, material);
 	}
 	
@@ -194,12 +194,16 @@ public class World {
 	private void pyramide(GPS gps){
 		int max =10;
 		for (int height=1; height<max; height++){
-			for (long x=(gps.getWestEast()-height); x<(gps.getWestEast()+height); x++){
-				for (long y=(gps.getSouthNorth()-height); y<(gps.getSouthNorth()+height); y++){
+			for (long x=(gps.getLongX()-height); x<(gps.getLongX()+height); x++){
+				for (long y=(gps.getLongZ()-height); y<(gps.getLongZ()+height); y++){
 					setVoxel(x,y,height, Material.m_rock);
 				}
 			}
 		}
+	}
+	
+	public int getChunkBase(){
+		return this.chunkBase;
 	}
 	
 	public class DlistGps{

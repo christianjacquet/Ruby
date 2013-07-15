@@ -1,6 +1,8 @@
 
 package com.digitalemu.engine;
 
+import java.text.DecimalFormat;
+
 import org.lwjgl.util.vector.Vector3f;
 
 import com.digitalemu.world.Material;
@@ -10,7 +12,7 @@ public class matte2 {
 	static Vector3f gps = new Vector3f();
 	static float radx,radz,rady, depy, distx, distz, disty, diffx,diffy,diffz,difft;
 	static float yaw =0;
-	static float pitch =90;
+	static float pitch =-7;
 	static int addX, addY, addZ;
 	private int lookAtDistance;
 	
@@ -37,15 +39,17 @@ public class matte2 {
 //    	radz = (float)Math.cos(Math.toRadians(yaw))*(1-(Math.abs(pitch)/90));
     	
     	System.out.println("x: "+gps.x+" z: "+gps.z+" y: "+gps.y+" radx: "+radx+" radz: "+radz+" rady: "+rady+" depy: "+depy+"Math.toRadians(pitch) "+Math.toRadians(pitch));
-    	System.out.println("sin : "+(float)(Math.sin(Math.toRadians(pitch))));
-    	System.out.println("asin: "+(float)(Math.asin(Math.toRadians(pitch))));
-    	System.out.println("cos: "+(float)(Math.cos(Math.toRadians(pitch))));
-    	System.out.println("acos: "+(float)(Math.acos(Math.toRadians(pitch))));
-    	System.out.println("tan: "+(float)(Math.tan(Math.toRadians(pitch))));
-    	System.out.println("atan: "+(float)(Math.atan(Math.toRadians(pitch))));
-    	System.out.println(" gps "+gps.y+" %1: "+(gps.y % 1)+
-    			" gps%-0 "+((gps.y % 1)-0)+" x1 "+(((gps.y % 1)-0)/rady)+
-    			" gps%-1 "+((gps.y % 1)-1)+" x2 "+(((gps.y % 1)-1)/rady));
+//    	System.out.println("sin : "+(float)(Math.sin(Math.toRadians(pitch))));
+//    	System.out.println("asin: "+(float)(Math.asin(Math.toRadians(pitch))));
+//    	System.out.println("cos: "+(float)(Math.cos(Math.toRadians(pitch))));
+//    	System.out.println("acos: "+(float)(Math.acos(Math.toRadians(pitch))));
+//    	System.out.println("tan: "+(float)(Math.tan(Math.toRadians(pitch))));
+    	System.out.println(68 - (68 % 64) + (int) 5.678f);
+//    	System.out.println(" gps "+gps.y+" %1: "+(gps.y % 1)+
+//    			" gps%-0 "+((gps.y % 1)-0)+" x1 "+(((gps.y % 1)-0)/rady)+
+//    			" gps%-1 "+((gps.y % 1)-1)+" x2 "+(((gps.y % 1)-1)/rady));
+//    	DecimalFormat df = new DecimalFormat("#.##");
+//    	System.out.println(df.format(123.456));
 
     	do {
     		try {
@@ -64,8 +68,8 @@ public class matte2 {
 	    	
 	    	if (radx < 0)	{distx = ((gps.x % 1)-addX)/radx;}					// west 
 	    	else 			{distx = ((1-(gps.x % 1))+addX)/radx;}				// east
-	    	if (rady < 0)	{disty = ((gps.y % 1)+addY)/rady;}					// up
-	    	else 			{disty = ((1-(gps.y % 1))-addY)/rady;}				// down
+	    	if (rady < 0)	{disty = ((1-(gps.y % 1))+addY)/rady;}				// up
+	    	else 			{disty = ((gps.y % 1)-addY)/rady;}					// down
 	    	if (radz < 0)	{distz = ((gps.z % 1)-addZ)/radz;}					// south
 	    	else 			{distz = ((-1-(gps.z % 1))+addZ)/radz;}				// north
 	    	// Calculate shortest distance
@@ -90,7 +94,7 @@ public class matte2 {
 	public static void main(String[] args) {
 		gps.x=9.5f;
 		gps.z=-5.5f;
-		gps.y=3.765f;
+		gps.y=2.6f;
 		lookAt(gps,5);
 
 	}
