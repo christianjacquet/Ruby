@@ -7,9 +7,12 @@ import org.lwjgl.util.vector.Vector3f;
 public class GPS extends Vector3f{
 	private static final long serialVersionUID = 1L;
 	World world;
-	Material material;
-	public enum VoxelSide { LEFT, RIGHT, FRONT, BACK, TOP, BOTTOM }
-	VoxelSide hit;
+	short material=-1;
+	public enum VoxelSide { UNKNOWN, LEFT, RIGHT, FRONT, BACK, TOP, BOTTOM }
+	public enum Direction { UNKNOWN, NORTH, SOUTH, EAST, WEST, UP, DOWN}
+	private VoxelSide hit = VoxelSide.UNKNOWN;
+	private Direction direction = Direction.UNKNOWN;
+	private float distance = 0;
 	long longX;		// West  = -	East  = +
 	long longZ;		// North = - 	South = + 
 	long longY;		// Up    = +    Down  = -
@@ -79,7 +82,9 @@ public class GPS extends Vector3f{
 		this.longY = gps.getLongY();
 		this.world = gps.getWorld();
 		this.hit   = gps.getHit();
+		this.direction = gps.getDirection();
 		this.material = gps.getMaterial();
+		this.distance = gps.getDistance();
 	}
 	
 
@@ -111,11 +116,11 @@ public class GPS extends Vector3f{
 	public VoxelSide getHit(){
 		return this.hit;
 	}
-	public void setMaterial(Material material){
+	public void setMaterial(short material){
 		this.material = material;
 	}
 
-	public Material getMaterial(){
+	public short getMaterial(){
 		return this.material;
 	}
 	
@@ -259,6 +264,41 @@ public class GPS extends Vector3f{
 		DecimalFormat df = new DecimalFormat("#.##");
 		return "GPS X: "+this.longX+" Z: "+this.longZ+" Y: "+this.longY+" Xf: "+df.format(this.x)+" Zf: "+df.format(this.z)+" Yf: "+df.format(this.y);
 	}
+
+	public String tofString(){
+		DecimalFormat df = new DecimalFormat("#.##");
+		return "GPS  Xf: "+df.format(this.x)+" Zf: "+df.format(this.z)+" Yf: "+df.format(this.y)+ "d: "+this.distance+" d: "+direction.toString()+" vs: "+hit.toString();
+	}
+	/**
+	 * @return the direction
+	 */
+	public Direction getDirection() {
+		return direction;
+	}
+
+	/**
+	 * @param direction the direction to set
+	 */
+	public void setDirection(Direction direction) {
+		this.direction = direction;
+	}
+
+	/**
+	 * @return the distance
+	 */
+	public float getDistance() {
+		return distance;
+	}
+
+	/**
+	 * @param distance the distance to set
+	 */
+	public void setDistance(float distance) {
+		this.distance = distance;
+	}
+	
+
+
 	
 
 }

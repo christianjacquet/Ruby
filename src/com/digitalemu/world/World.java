@@ -162,6 +162,8 @@ public class World {
 		return chunk.getVoxel(ew, ud, sn);
 	}
 	
+
+	
 	public void setVoxel(GPS gps, short material){
 		Chunk3 chunk=getChunk(gps);
 		int ew = (int) (gps.getLongX() - chunk.getGps().getLongX());

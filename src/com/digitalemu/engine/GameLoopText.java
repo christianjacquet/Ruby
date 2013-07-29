@@ -15,7 +15,6 @@ import java.io.File;
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
-import java.util.Collections;
 
 import javax.imageio.ImageIO;
 import org.lwjgl.BufferUtils;
@@ -35,18 +34,18 @@ import org.newdawn.slick.opengl.Texture;
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.ARBVertexBufferObject.*;
 import com.digitalemu.gui.Monitor;
+import com.digitalemu.monster.MovableEntity.moveDir;
+import com.digitalemu.monster.Player;
 import com.digitalemu.world.Material;
 
 import com.digitalemu.world.World;
 import com.digitalemu.world.GPS;
 import com.digitalemu.world.Textures;
-import com.digitalemu.world.Chunk3;
 import com.digitalemu.world.World.DlistGps;
 import com.digitalemu.text.TrueTypeFont;
 
 
 public class GameLoopText {
-	private static final String String = null;
 	private World world;
     private boolean done = false;
     private boolean fullscreen = false;
@@ -73,11 +72,9 @@ public class GameLoopText {
 	private long ramFree=0;
 	private long ramUsed=0;
 	private int lookAtDistance;
-	private TrueTypeFont trueTypeFont;
 	int lastused=0;
 	public enum walkDir {FRONT, BACK, LEFT, RIGHT, UP, DOWN};
 	public walkDir walkto;
-	private final String[] VIEWs={"TOP","BOT","NORTH","SOUTH","EAST","WEST","ALL","OLD","Dummy"};	
 	float dx        = 0.0f;
     float dy        = 0.0f;
     float dt        = 0.0f; //length of frame
@@ -85,13 +82,12 @@ public class GameLoopText {
     float movementSpeed = 10.0f; //move 10 units per second	
     float distance=0.0f;
 	//3d vector to store the camera's position in
-    private GPS    position    = new GPS(9.5f, 2.4f, -5.5f);  // starting position of player
+    //private GPS    position    = new GPS(9.5f, 2.4f, -5.5f);  // starting position of player
     private Vector3f    position2    = new Vector3f(16.0f, 0.0f, 0.0f);
-    private GPS	foundMaterialPos = new GPS();
+    //private GPS	foundMaterialPos = new GPS();
     private short       foundMaterial=0;
     private String 		HowILook;
     private Vector3f    collision  = new Vector3f();
-    private Vector3f    lastpos  = new Vector3f();
     //the rotation around the Y axis of the camera
     private float       yaw         = 0.0f;
     //the rotation around the X axis of the camera
@@ -110,26 +106,26 @@ public class GameLoopText {
 	private int lx=0,ly=0,lz=0;
 	static Monitor monitor;
 	static Monitor stats;
-	private String message ="";
 	private enum hudPos {UpperLeft, UpperCenter, UpperRight, CenterLeft, Center, CenterRight, DownLeft, DownCenter, DownRight};
 	private static final int BYTES_PER_PIXEL = 4;
 	private DlistGps[] dlistGPS;
-	private Vector3f lookAtVoxel = new Vector3f(0,0,0);
-	private static float radx, rady, radz, distx, distz, disty;		
+//	private static float radx, rady, radz, distx, distz, disty;		
 	float diffx;
 	float diffz;
 	float diffy;
 	float difft;
-	static int addX, addY, addZ;
-	private GPS lookAtGPS = new GPS();
-	private GPS lookAtGPS2 = new GPS();
-	private short lookAtMaterial = Material.m_null;
-	private short lookAtMaterial2 = Material.m_null;
-	private boolean lookAtMaterialFound=false;
-	private boolean lookAtMaterialFound2=false;
-	private String dir = "";
-	private String hit = "";
+//	static int addX, addY, addZ;
+//	private GPS lookAtGPS = new GPS();
+//	private GPS lookAtGPS2 = new GPS();
+//	private short lookAtMaterial = Material.m_null;
+//	private short lookAtMaterial2 = Material.m_null;
+//	private boolean lookAtMaterialFound=false;
+//	private boolean lookAtMaterialFound2=false;
+//	private String dir = "";
+//	private String hit = "";
 	float ltx,lty, ltz;
+	
+	private Player player;
 
 
 	BufferedImage test = new BufferedImage(400, 400, BufferedImage.TYPE_INT_ARGB);
@@ -157,43 +153,43 @@ public class GameLoopText {
         l6.run(fullscreen);
     }
     
-    public int compileInventoryDisplayList(){
-        int oglDisplayList = glGenLists(1);
-        glNewList(oglDisplayList, GL_COMPILE);{
-            //glTranslatef((float) displayMode.getWidth() / 2.0f, (float) displayMode.getHeight() / 3.0f, 0.0f);
-        	Texture tex = textureInventoryHUD.getTexture();
-        	glTranslatef((float) displayMode.getWidth() / 2.0f, 768.0f, 0.0f);
-        	msg("tex height: "+tex.getImageHeight());
-            glEnable(GL_TEXTURE_2D);
-            
-            tex.bind(); // newdawn.slick (same library for my whole program, so this works)
-
-            float hw = tex.getTextureWidth(); // half width
-            float hh = tex.getTextureHeight(); // half height
-
-            Vector2f _texPosUpLeft = new Vector2f(0, 0);
-            Vector2f _texPosDownRight = new Vector2f(_texPosUpLeft.x + hw, _texPosUpLeft.y + hh);
-
-            _texPosUpLeft.x /= tex.getTextureWidth();
-            _texPosUpLeft.y /= tex.getTextureHeight();
-            _texPosDownRight.x /= tex.getTextureWidth();
-            _texPosDownRight.y /= tex.getTextureHeight();
-
-            glColor3f(1, 1, 1); // Changes this doesn't make any effect
-            glBegin(GL_QUADS);
-            glTexCoord2f(_texPosUpLeft.x, _texPosUpLeft.y);
-            glVertex2f(-hw, -hh);
-            glTexCoord2f(_texPosDownRight.x, _texPosUpLeft.y);
-            glVertex2f(hw, -hh);
-            glTexCoord2f(_texPosDownRight.x, _texPosDownRight.y);
-            glVertex2f(hw, hh);
-            glTexCoord2f(_texPosUpLeft.x, _texPosDownRight.y);
-            glVertex2f(-hw, hh);
-        }
-        glEnd();
-        glEndList();
-        return oglDisplayList;
-    }
+//    public int compileInventoryDisplayList(){
+//        int oglDisplayList = glGenLists(1);
+//        glNewList(oglDisplayList, GL_COMPILE);{
+//            //glTranslatef((float) displayMode.getWidth() / 2.0f, (float) displayMode.getHeight() / 3.0f, 0.0f);
+//        	Texture tex = textureInventoryHUD.getTexture();
+//        	glTranslatef((float) displayMode.getWidth() / 2.0f, 768.0f, 0.0f);
+//        	msg("tex height: "+tex.getImageHeight());
+//            glEnable(GL_TEXTURE_2D);
+//            
+//            tex.bind(); // newdawn.slick (same library for my whole program, so this works)
+//
+//            float hw = tex.getTextureWidth(); // half width
+//            float hh = tex.getTextureHeight(); // half height
+//
+//            Vector2f _texPosUpLeft = new Vector2f(0, 0);
+//            Vector2f _texPosDownRight = new Vector2f(_texPosUpLeft.x + hw, _texPosUpLeft.y + hh);
+//
+//            _texPosUpLeft.x /= tex.getTextureWidth();
+//            _texPosUpLeft.y /= tex.getTextureHeight();
+//            _texPosDownRight.x /= tex.getTextureWidth();
+//            _texPosDownRight.y /= tex.getTextureHeight();
+//
+//            glColor3f(1, 1, 1); // Changes this doesn't make any effect
+//            glBegin(GL_QUADS);
+//            glTexCoord2f(_texPosUpLeft.x, _texPosUpLeft.y);
+//            glVertex2f(-hw, -hh);
+//            glTexCoord2f(_texPosDownRight.x, _texPosUpLeft.y);
+//            glVertex2f(hw, -hh);
+//            glTexCoord2f(_texPosDownRight.x, _texPosDownRight.y);
+//            glVertex2f(hw, hh);
+//            glTexCoord2f(_texPosUpLeft.x, _texPosDownRight.y);
+//            glVertex2f(-hw, hh);
+//        }
+//        glEnd();
+//        glEndList();
+//        return oglDisplayList;
+//    }
 
     
     public void renderInventory()
@@ -303,23 +299,23 @@ public class GameLoopText {
     public void showstats(){
     	stats.clear();
         stats.println("World: "+dlistGPS.length);
-        stats.println("Found Material "+foundMaterial+" direction: "+dir+ " hit: "+hit+" @ "+foundMaterialPos.toSString());
+        stats.println("Found Material "+foundMaterial+" direction: "+player.getDirection().toString()+ " hit: "+player.getHit().toString()+" @ "+player.lookAtPos.toSString());
         stats.println("HowILook: "+HowILook);
         stats.println("Looptime: "+elapsedTime + " FPS: "+fps);
         stats.println("Render3D: "+render3d);
         stats.println("Render2D: "+render2da+" - "+render2db+" - "+render2dc+" - "+render2dd);
-        stats.println(position.toSString());
-        stats.println("Y: "+position.y);
-        stats.println("Z: "+position.z);
+        stats.println(player.toSString());
+        stats.println("Y: "+player.y);
+        stats.println("Z: "+player.z);
         stats.println("Yaw: "+(int)yaw+" Pitch: "+(int)pitch);
         stats.println("Yaw.x: "+(float)Math.sin(Math.toRadians(yaw))+" Yaw.y: "+(float)Math.cos(Math.toRadians(yaw)));
-        stats.println("Below me: "+world.getVoxel(position));
+        stats.println("Below me: "+world.getVoxel(player));
         stats.println("RAM used: "+ramUsed+" free: "+ramFree+" total: "+ramTotal);
-        stats.println("X: "+lookAtGPS.getLongX()+" Y: "+lookAtGPS.getLongY()+" Z: "+lookAtGPS.getLongZ()+ " M: "+lookAtMaterial+" F: "+lookAtMaterialFound);
+        stats.println("X: "+player.getLongX()+" Y: "+player.getLongY()+" Z: "+player.getLongZ()+ " M: "+player.lookAtMaterial+" F: "+player.lookAtMaterialFound);
         stats.println("Distance: "+lookAtDistance);
-        stats.println("radx: "+radx+" rady: "+rady+" radz; "+radz);
+        stats.println("radx: "+player.radx+" rady: "+player.rady+" radz; "+player.radz);
         stats.println("difx: "+diffx+" dify: "+diffy+" difz: "+diffz+" t: "+difft);
-        stats.println("distx: "+distx+" disty: "+disty+" distz: "+distz);
+        stats.println("distx: "+player.distx+" disty: "+player.disty+" distz: "+player.distz);
         stats.println("dlistGPS.length:"+dlistGPS.length);
     }
     
@@ -364,17 +360,16 @@ public class GameLoopText {
         g2d.drawString("Looptime: "+elapsedTime, 60, 32);
         g2d.drawString("Render3D: "+render3d, 10, 48);
         g2d.drawString("Render2D: "+render2da+" - "+render2db+" - "+render2dc+" - "+render2dd, 10, 64);
-        g2d.drawString("X: "+position.x, 10, 80);
-        g2d.drawString("Y: "+position.y, 10, 96);
-        g2d.drawString("Z: "+position.z, 10, 112);
+        g2d.drawString("X: "+player.x, 10, 80);
+        g2d.drawString("Y: "+player.y, 10, 96);
+        g2d.drawString("Z: "+player.z, 10, 112);
         g2d.drawString("Yaw: "+(int)yaw+" Pitch: "+(int)pitch, 10, 128);
         g2d.drawString("Yaw.x: "+(float)Math.sin(Math.toRadians(yaw))+" Yaw.y: "+(float)Math.cos(Math.toRadians(yaw)), 10, 144);
-        g2d.drawString("Below me: "+(belowThis(position)), 10, 160);
+        g2d.drawString("Below me: "+(belowThis(player)), 10, 160);
         g2d.drawString("RAM used: "+ramUsed+" free: "+ramFree+" total: "+ramTotal, 10, 176);
-        g2d.drawString("X: "+lookAtGPS.getLongX()+" Y: "+lookAtGPS.getLongY()+" Z: "+lookAtGPS.getLongZ()+ " M: "+lookAtMaterial+" F: "+lookAtMaterialFound, 10, 192);
-        g2d.drawString("X: "+lookAtGPS2.getLongX()+" Y: "+lookAtGPS2.getLongY()+" Z: "+lookAtGPS2.getLongZ()+ " M: "+lookAtMaterial2+" F: "+lookAtMaterialFound2, 10, 208);
+        g2d.drawString("X: "+player.getLongX()+" Y: "+player.getLongY()+" Z: "+player.getLongZ()+ " M: "+player.lookAtMaterial+" F: "+player.lookAtMaterialFound, 10, 192);
         g2d.drawString("Distance: "+lookAtDistance, 10, 224);
-        g2d.drawString("radx: "+radx+" rady: "+rady+" radz; "+radz,10,240);
+        g2d.drawString("radx: "+player.radx+" rady: "+player.rady+" radz; "+player.radz,10,240);
         
         g2d.drawString("difx: "+diffx+" dify: "+diffy+" difz: "+diffz+" t: "+difft,10,256);
 
@@ -545,133 +540,28 @@ public class GameLoopText {
         GL11.glEnd();
     }
     
-    public  void lookAt(GPS gps, int maxDistance){
-    	addX=0;
-    	addY=0;
-    	addZ=0;
-    	HowILook="";
-    	lookAtMaterialFound=false;
-    	foundMaterial = -1;
-    	HowILook=HowILook+"["+(int)gps.getX()+"]["+(int)gps.getZ()+"]["+(int)gps.getY()+"] "; 
-    	dir = "unknown";
-    	hit = "";
-    	foundMaterialPos.clone(gps);
-    	// Calculate speed in x,z and y direction
-    	rady = (float)Math.sin(Math.toRadians(pitch));
-    	radx = (float)Math.sin(Math.toRadians(yaw))*(float)(Math.cos(Math.toRadians(pitch)));
-    	radz = (float)Math.cos(Math.toRadians(yaw))*(float)(Math.cos(Math.toRadians(pitch)));
-    	do {
-	    	// Calculate distance to next x,z and y depending on gps and speed
-	    	if (radx < 0)	{distx = ((gps.getX() % 1)-addX)/radx;}					// west 
-	    	else 			{distx = ((1-(gps.getX() % 1))+addX)/radx;}				// east
-	    	if (rady < 0)	{disty = ((1-(gps.getY() % 1))+addY)/rady;}				// up
-	    	else 			{disty = ((gps.getY() % 1)-addY)/rady;}					// down
-	    	if (radz < 0)	{distz = ((gps.getZ() % 1)-addZ)/radz;}					// south
-	    	else 			{distz = ((-1-(gps.getZ() % 1))+addZ)/radz;}			// north
-	    	// Calculate shortest distance
-	    	if(Math.abs(distx)<Math.abs(disty) && Math.abs(distx)<Math.abs(distz)){
-				if(yaw<=180){ dir="east"; 	addX++;  hit="left  "; }
-				else 		{ dir="west"; 	addX--;  hit="right ";  }
-		    	foundMaterialPos.setLongX(gps.getLongX()+addX);
-	    	}else if(Math.abs(disty)<Math.abs(distz) && Math.abs(disty)<Math.abs(distx)){
-				if(pitch<0)	{ dir="up"; 	addY++;  hit="botto ";  }
-				else 		{ dir="down"; 	addY--;  hit="top   ";  }  
-		    	foundMaterialPos.setLongY(gps.getLongY()+addY);
-			}else{
-				if((yaw>270)||(yaw<90))	{ dir="north"; 	addZ--;  hit="front "; }
-				else 		{ dir="south"; 	addZ++; hit="Back  "; }
-		    	foundMaterialPos.setLongZ(gps.getLongZ()+addZ);
-	    	}
-	    	//HowILook=HowILook+dir+foundMaterialPos.toMString();
-	    	GL11.glColor3f(1.0f, 1.0f, 1.0f);
-	    	drawWireframeIndex(foundMaterialPos,0f);
-    		if (world.getVoxel(foundMaterialPos) != Material.m_air){
-    			foundMaterial=world.getVoxel(foundMaterialPos);
-    			lookAtMaterialFound=true;
-    			break;
-    		}
-    	} while (Math.abs(addX)<maxDistance && Math.abs(addY)<maxDistance && Math.abs(addZ)<maxDistance);
-    }
+
     
 
     
-    /**
-     * detectCollision takes current position and distance as input.
-     * It loops through every intermediate Voxel between start and stop.
-     * If a solid Voxel in the path is found, it returns the position immediately
-     * before the solid Voxel.
-     * @param startPos
-     * @param endPos
-     * @return
-     */
-    public float detectCollision( GPS gps, float distance, float yaw , float pitch, int i){
-    	addX=0;
-    	addY=0;
-    	addZ=0;
-    	distance+=.3f;
-    	System.out.print("Collision "+gps.toSString()+" D: "+distance+" yaw:"+yaw+" pitch:"+pitch);
-    	float totalDistance=0;
-    	foundMaterialPos.clone(gps);
-    	// Calculate speed in x,z and y direction
-    	rady = (float)Math.sin(Math.toRadians(pitch));
-    	radx = (float)Math.sin(Math.toRadians(yaw))*(float)(Math.cos(Math.toRadians(pitch)));
-    	radz = (float)Math.cos(Math.toRadians(yaw))*(float)(Math.cos(Math.toRadians(pitch)));
-    	do {
-	    	// Calculate distance to next x,z and y depending on gps and speed
-	    	if (radx < 0)	{distx = ((gps.getX() % 1)-addX)/radx;}					// west 
-	    	else 			{distx = ((1-(gps.getX() % 1))+addX)/radx;}				// east
-	    	if (rady < 0)	{disty = ((1-(gps.getY() % 1))+addY)/rady;}				// up
-	    	else 			{disty = ((gps.getY() % 1)-addY)/rady;}					// down
-	    	if (radz < 0)	{distz = ((gps.getZ() % 1)-addZ)/radz;}					// south
-	    	else 			{distz = ((-1-(gps.getZ() % 1))+addZ)/radz;}			// north
-	    	// Calculate shortest distance
-	    	if(Math.abs(distx)<Math.abs(disty) && Math.abs(distx)<Math.abs(distz)){
-				if(yaw<=180){ dir="east"; 	addX++;  hit="left  "; }
-				else 		{ dir="west"; 	addX--;  hit="right ";  }
-		    	foundMaterialPos.setLongX(gps.getLongX()+addX);
-		    	totalDistance = distx;
-	    	}else if(Math.abs(disty)<Math.abs(distz) && Math.abs(disty)<Math.abs(distx)){
-				if(pitch<0)	{ dir="up"; 	addY++;  hit="botto ";  }
-				else 		{ dir="down"; 	addY--;  hit="top   ";  }  
-		    	foundMaterialPos.setLongY(gps.getLongY()+addY);
-		    	totalDistance = disty;
-			}else{
-				if((yaw>270)||(yaw<90))	{ dir="north"; 	addZ--;  hit="front "; }
-				else 		{ dir="south"; 	addZ++; hit="Back  "; }
-		    	foundMaterialPos.setLongZ(gps.getLongZ()+addZ);
-		    	totalDistance = distz;
-	    	}
-    		if (world.getVoxel(foundMaterialPos) != Material.m_air){
-    			// I ran into something, now I need to back off a little.
-    			// For X and Z it could be enough with totaldistance-=0.3f;
-    			// Need to check height also.
-    			System.out.print(" found "+world.getVoxel(foundMaterialPos));
-        		System.out.println(" TOT:"+Math.abs(totalDistance));
-        		return Math.abs(totalDistance)-0.3f;
-    			//break;
-    		}
-    		System.out.print(" >"+Math.abs(totalDistance));
-    	} while (distance > Math.abs(totalDistance));
-    	System.out.println(" DST:"+distance);
-    		return distance-0.3f;
-    }
     
     
     public void run(boolean fullscreen) {
         this.fullscreen = fullscreen;
         int fps=0;
-        int inventorydisplaylist; 
-        Font font = new Font("monospaced", Font.BOLD, 16);
+//        int inventorydisplaylist; 
+//        Font font = new Font("monospaced", Font.BOLD, 16);
         
         
 
         try {
             init();
             world = new World(1, 128,  textureMaterials);
-            foundMaterialPos.setWorld(world); // Not nice, but GPS needs world
-            position.setWorld(world);
+            player    = new Player("Christian", new GPS(9.5f, 2.4f, -5.5f, world));  // starting position of player
+            //foundMaterialPos.setWorld(world); // Not nice, but GPS needs world
+            //player.setWorld(world);
             dlistGPS = world.compileDlist();
-            inventorydisplaylist = compileInventoryDisplayList();
+            //inventorydisplaylist = compileInventoryDisplayList();
             //world.generateTerrain(123);       
           //hide the mouse
             Mouse.setGrabbed(true);
@@ -684,7 +574,8 @@ public class GameLoopText {
             	// Render 3D Display Lists
                 initGL3D();
             	//lookAt();
-                lookAt(position,6);
+                //player.lookAt(6);
+                drawWireframeIndex(player.lookAt(player, pitch, yaw, 6),0f);
             	//lookAt(new GPS(position.x,position.y,position.z, world),6);
             	
             	
@@ -693,13 +584,13 @@ public class GameLoopText {
         	        lookThrough(dlistGPS[i].getDlGPS());
         	        glCallList(dlistGPS[i].getDisplayList());
             	}
-            	if(lookAtMaterialFound) {
+            	if(player.lookAtMaterialFound) {
             		GL11.glColor3f(1.0f, 0.0f, 0.0f);
-                	drawWireframeIndex(foundMaterialPos,0.02f);
+                	drawWireframeIndex(player.lookAtPos,0.02f);
             	}
             	else {
             		GL11.glColor3f(0.6f, 0.6f, 0.6f);
-                	drawWireframe(foundMaterialPos);
+                	drawWireframe(player.lookAtPos);
             	}
         		//drawLine(lookAtVoxel);
             	render3d = (Sys.getTime()-time);
@@ -725,7 +616,8 @@ public class GameLoopText {
 
             	time2=time;
                 mainloop(elapsedTime);
-
+                sleep(16);
+                //eeplayer.detectCollision(player,distance, yaw, pitch);
                 fps++;
                 if(time2>seconds){
                 	seconds=time2+1000;
@@ -775,138 +667,35 @@ public class GameLoopText {
     
 
     
-    private Vector3f collisionDetect(Vector3f after, int height){
-    	//Vector3f    collision  = new Vector3f();
-    	collision.setX(after.getX());
-    	collision.setY(after.getY());
-    	collision.setZ(after.getZ());
-    	if (yaw>270){   	// 270-360
-//    		msg("270-360");
-    		if((after.getX()%1)<0.3f){
-    			collision.setX(after.getX()-1);
-    			if (world.getVoxel(toGPS(collision))==Material.m_air){
-    	        	collision.setX(after.getX());
-    	        }
-    	        else{
-//    	        	msg("collision x "+world.getVoxel(toGPS(collision)));
-    	        	collision.setX(((int)after.getX())+0.3f);
-    	        }  			
-    		}
-    		if((after.getZ()%1)<0.3f){
-    			collision.setZ(after.getZ()-1);
-    			if (world.getVoxel(toGPS(collision))==Material.m_air){
-    	        	collision.setZ(after.getZ());
-    	        }
-    	        else{
-//    	        	msg("collision z "+world.getVoxel(toGPS(collision)));
-    	        	collision.setZ(((int)after.getZ())+0.3f);
-    	        }  			
-    		}
-    	}
-    	else if (yaw>180){	// 180-270
-//    		msg("180-270");
-//    		if((after.getX()%1)<0.3f){
-    			collision.setX(after.getX()-1);
-    			if (world.getVoxel(toGPS(collision))==Material.m_air){
-//    				msg("no collision x "+world.getVoxel(toGPS(collision)));
-    	        	collision.setX(after.getX());
-    	        }
-    	        else{
-//    	        	msg("collision x "+world.getVoxel(toGPS(collision)));
-    	        	collision.setX(((int)after.getX())+0.3f);
-    	        }  			
-//    		}
-//    		if((after.getZ()%1)>0.7f){
-    			collision.setZ(after.getZ()+1);
-    			if (world.getVoxel(toGPS(collision))==Material.m_air){
-//    				msg("no collision z "+world.getVoxel(toGPS(collision)));
-    	        	collision.setZ(after.getZ());
-    	        }
-    	        else{
-//    	        	msg("collision z "+world.getVoxel(toGPS(collision)));
-    	        	collision.setZ(((int)after.getZ())+0.7f);
-    	        }  			
-//    		}
-    		
-    	}
-    	else if (yaw> 90){	//  90-180
-//    		msg("90-180");
-    		if((after.getX()%1)>0.7f){
-    			collision.setX(after.getX()+1);
-    			if (world.getVoxel(toGPS(collision))==Material.m_air){
-    	        	collision.setX(after.getX());
-    	        }
-    	        else{
-//    	        	msg("collision x "+world.getVoxel(toGPS(collision)));
-    	        	collision.setX(((int)after.getX())+0.7f);
-    	        }  			
-    		}
-    		if((after.getZ()%1)>0.7f){
-    			collision.setZ(after.getZ()+1);
-    			if (world.getVoxel(toGPS(collision))==Material.m_air){
-    	        	collision.setZ(after.getZ());
-    	        }
-    	        else{
-//    	        	msg("collision z "+world.getVoxel(toGPS(collision)));
-    	        	collision.setZ(((int)after.getZ())+0.7f);
-    	        }  			
-    		}
-    		
-    	}
-    	else {				//   0- 90
-//    		msg("0-90");
-    		if((after.getX()%1)>0.7f){
-    			collision.setX(after.getX()+1);
-    			if (world.getVoxel(toGPS(collision))==Material.m_air){
-    	        	collision.setX(after.getX());
-    	        }
-    	        else{
-//    	        	msg("collision x "+world.getVoxel(toGPS(collision)));
-    	        	collision.setX(((int)after.getX())+0.7f);
-    	        }  			
-    		}
-    		if((after.getZ()%1)<0.3f){
-    			collision.setZ(after.getZ()-1);
-    			if (world.getVoxel(toGPS(collision))==Material.m_air){
-    	        	collision.setZ(after.getZ());
-    	        }
-    	        else{
-//    	        	msg("collision z "+world.getVoxel(toGPS(collision)));
-    	        	collision.setZ(((int)after.getZ())+0.3f);
-    	        }  			
-    		}   		
-    	}
-    	message = "P1x: "+collision.x+" P1y: "+collision.y+" P1z: "+collision.z;
-    	return collision;
-    }
+
     
   //moves the camera forward relative to its current rotation (yaw)
     public void walkForward(float distance)
     {
     	//detectCollision(distance);
-        position2.setX(position.add2FloatX(distance * (float)Math.sin(Math.toRadians(yaw))));
-        position2.setZ(position.add2FloatZ(0-(distance * (float)Math.cos(Math.toRadians(yaw)))));
-        position2.setY(position.getY());
+        position2.setX(player.add2FloatX(distance * (float)Math.sin(Math.toRadians(yaw))));
+        position2.setZ(player.add2FloatZ(0-(distance * (float)Math.cos(Math.toRadians(yaw)))));
+        position2.setY(player.getY());
 
         
     }     
     //moves the camera backward relative to its current rotation (yaw)
     public void walkBackwards(float distance)
     {
-        position.add2FloatX(0-(distance * (float)Math.sin(Math.toRadians(yaw))));
-        position.add2FloatZ(distance * (float)Math.cos(Math.toRadians(yaw)));
+    	player.add2FloatX(0-(distance * (float)Math.sin(Math.toRadians(yaw))));
+    	player.add2FloatZ(distance * (float)Math.cos(Math.toRadians(yaw)));
     }
          //strafes the camera left relitive to its current rotation (yaw)
     public void strafeLeft(float distance)
     {
-        position.add2FloatX(distance * (float)Math.sin(Math.toRadians(yaw-90)));
-        position.add2FloatZ(0-(distance * (float)Math.cos(Math.toRadians(yaw-90))));
+    	player.add2FloatX(distance * (float)Math.sin(Math.toRadians(yaw-90)));
+    	player.add2FloatZ(0-(distance * (float)Math.cos(Math.toRadians(yaw-90))));
     }     
     //strafes the camera right relitive to its current rotation (yaw)
     public void strafeRight(float distance)
     {
-        position.add2FloatX(distance * (float)Math.sin(Math.toRadians(yaw+90)));
-        position.add2FloatZ(0-(distance * (float)Math.cos(Math.toRadians(yaw+90))));
+    	player.add2FloatX(distance * (float)Math.sin(Math.toRadians(yaw+90)));
+    	player.add2FloatZ(0-(distance * (float)Math.cos(Math.toRadians(yaw+90))));
     }
     
   
@@ -954,12 +743,12 @@ public class GameLoopText {
         distance = (walkSpeed * elapsedTime)/1000;
         //distance = detectCollision(position,distance, 2);
         //if (distance>0.9f){ msg("Distance exceeded : "+distance); distance = 0.9f; }
-        if((Keyboard.isKeyDown(Keyboard.KEY_D))&& (lastused!=1)){ strafeRight(detectCollision(position,distance, yaw+90, pitch, 2)); lastused=1;}
-        if((Keyboard.isKeyDown(Keyboard.KEY_Q))&& (lastused!=2)){ position.add2FloatY(detectCollision(position,distance, yaw-90, pitch, 2)); lastused=2; }
-        if((Keyboard.isKeyDown(Keyboard.KEY_S))&& (lastused!=3)){ walkBackwards(detectCollision(position,distance, yaw+180, pitch, 2)); lastused=3 ; }
-        if((Keyboard.isKeyDown(Keyboard.KEY_A))&& (lastused!=4)){ strafeLeft(detectCollision(position,distance, yaw-90, pitch, 2)); lastused=4;}
-        if((Keyboard.isKeyDown(Keyboard.KEY_E))&& (lastused!=5)){ position.add2FloatY(0-(detectCollision(position,distance, yaw, pitch+90, 2))); lastused=5; }
-        if((Keyboard.isKeyDown(Keyboard.KEY_W))&& (lastused!=6)){ walkForward(detectCollision(position,distance, yaw, pitch, 2)); lastused=6; }
+        if((Keyboard.isKeyDown(Keyboard.KEY_D))&& (lastused!=1)){ player.detectCollision(distance, yaw+90, pitch, moveDir.RIGHT); lastused=1;}
+        if((Keyboard.isKeyDown(Keyboard.KEY_Q))&& (lastused!=2)){ player.detectCollision(distance, yaw-90, pitch, moveDir.UP); lastused=2; }
+        if((Keyboard.isKeyDown(Keyboard.KEY_S))&& (lastused!=3)){ player.detectCollision(distance, yaw+180, pitch, moveDir.BACKWARD); lastused=3 ; }
+        if((Keyboard.isKeyDown(Keyboard.KEY_A))&& (lastused!=4)){ player.detectCollision(distance, yaw-90, pitch, moveDir.LEFT); lastused=4;}
+        if((Keyboard.isKeyDown(Keyboard.KEY_E))&& (lastused!=5)){ player.detectCollision(distance, yaw, pitch+90, moveDir.DOWN); lastused=5; }
+        if((Keyboard.isKeyDown(Keyboard.KEY_W))&& (lastused!=6)){ player.detectCollision(distance, yaw, pitch, moveDir.FORWARD); lastused=6; }
         if((Keyboard.isKeyDown(Keyboard.KEY_NUMPAD7))&& (lastused!=7)){ yaw++; lastused=7; }
         if((Keyboard.isKeyDown(Keyboard.KEY_NUMPAD8))&& (lastused!=8)){ yaw--; lastused=8; }
         if((Keyboard.isKeyDown(Keyboard.KEY_NUMPAD9))&& (lastused!=9)){ pitch++; lastused=9; }
@@ -1025,17 +814,6 @@ public class GameLoopText {
 
 
 
-    
-    private float[] getMaterialIndexes(byte material){
-    	float[] indexes= new float[2];
-    	byte indy = (byte) (material/16);
-    	byte indx = (byte) (material - (indy*16));
-    	indexes[0]= (indx*0.0625f);
-    	indexes[1]= (indy*0.0625f);
-    	return indexes;
-    }
-
-
     //translates and rotate the matrix so that it looks through the camera
     //this dose basic what gluLookAt() does
     public void lookThrough(GPS gps)
@@ -1047,9 +825,9 @@ public class GameLoopText {
         // translate to the position vector's location
         // gps contains the GPS position of a displaylist
         // position contains the position of the player
-        ltx=0-position.x+gps.getLongX();
-        lty=0-position.y+gps.getLongY();
-        ltz=0-position.z+gps.getLongZ();
+        ltx=0-player.x+gps.getLongX();
+        lty=0-player.y+gps.getLongY();
+        ltz=0-player.z+gps.getLongZ();
         GL11.glTranslatef(ltx,lty,ltz);
     }
 
