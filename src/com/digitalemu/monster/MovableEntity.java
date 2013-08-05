@@ -52,11 +52,17 @@ public class MovableEntity extends GPS{
     public final int axelZ=0;
 
     GPS wantedPos = new GPS();
+    GPS tempPos = new GPS();
+    GPS[] boundingBox;
     float[] speed;
     float[] distance;
     
 	
 public MovableEntity(String name, GPS gps){
+	boundingBox[0] = new GPS();
+	boundingBox[1] = new GPS();
+	boundingBox[2] = new GPS();
+	boundingBox[3] = new GPS();
 	speed = new float[3];
 	distance = new float[3];
 	colDistGps = new GPS[4];
@@ -124,58 +130,61 @@ public  GPS lookAt(GPS gps, float pitch, float yaw, int maxDistance){
 	lookAtPos.setHit(VoxelSide.UNKNOWN);
 	//System.out.println(lookAtPos.tofString()+" pitch: "+(int)pitch+" yaw: "+(int)yaw+" dist: "+maxDistance+" lookat");
 	// Calculate speed in x,z and y direction
-	rady = (float)Math.sin(Math.toRadians(pitch));
-	radx = (float)Math.sin(Math.toRadians(yaw))*(float)(Math.cos(Math.toRadians(pitch)));
-	radz = (float)Math.cos(Math.toRadians(yaw))*(float)(Math.cos(Math.toRadians(pitch)));
+	calculateSpeed(pitch, yaw);
+//	rady = (float)Math.sin(Math.toRadians(pitch));
+//	radx = (float)Math.sin(Math.toRadians(yaw))*(float)(Math.cos(Math.toRadians(pitch)));
+//	radz = (float)Math.cos(Math.toRadians(yaw))*(float)(Math.cos(Math.toRadians(pitch)));
 	do {
     	// Calculate distance to next x,z and y depending on gps and speed
-    	if (radx < 0)	{distx = ((gps.getX() % 1)-addX)/radx;}					// west 
-    	else 			{distx = ((1-(gps.getX() % 1))+addX)/radx;}				// east
-    	if (rady < 0)	{disty = ((1-(gps.getY() % 1))+addY)/rady;}				// up
-    	else 			{disty = ((gps.getY() % 1)-addY)/rady;}					// down
-    	if (radz < 0)	{distz = ((gps.getZ() % 1)-addZ)/radz;}					// south
-    	else 			{distz = ((-1-(gps.getZ() % 1))+addZ)/radz;}			// north
+		calculateDistance(gps);
+//    	if (radx < 0)	{distx = ((gps.getX() % 1)-addX)/radx;}					// west 
+//    	else 			{distx = ((1-(gps.getX() % 1))+addX)/radx;}				// east
+//    	if (rady < 0)	{disty = ((1-(gps.getY() % 1))+addY)/rady;}				// up
+//    	else 			{disty = ((gps.getY() % 1)-addY)/rady;}					// down
+//    	if (radz < 0)	{distz = ((gps.getZ() % 1)-addZ)/radz;}					// south
+//    	else 			{distz = ((-1-(gps.getZ() % 1))+addZ)/radz;}			// north
     	// Calculate shortest distance
-    	if(Math.abs(distx)<Math.abs(disty) && Math.abs(distx)<Math.abs(distz)){
-			if(yaw<=180){ 
-				lookAtPos.setDirection(Direction.EAST); 	
-				lookAtPos.setHit(VoxelSide.LEFT);
-				addX++;  
-			}
-			else 		{ 
-				lookAtPos.setDirection(Direction.WEST);
-				lookAtPos.setHit(VoxelSide.RIGHT);
-				addX--;  
-			}
-	    	lookAtPos.setLongX(gps.getLongX()+addX);
-	    	lookAtPos.setDistance(distx);
-    	}else if(Math.abs(disty)<Math.abs(distz) && Math.abs(disty)<Math.abs(distx)){
-			if(pitch<0)	{ 
-				lookAtPos.setDirection(Direction.UP);
-				lookAtPos.setHit(VoxelSide.BOTTOM);
-				addY++;  
-			}
-			else 		{ 
-				lookAtPos.setDirection(Direction.DOWN);
-				lookAtPos.setHit(VoxelSide.TOP);
-				addY--;  
-			}  
-	    	lookAtPos.setLongY(gps.getLongY()+addY);
-	    	lookAtPos.setDistance(disty);
-		}else{
-			if((yaw>270)||(yaw<90))	{ 
-				lookAtPos.setDirection(Direction.NORTH); 
-				lookAtPos.setHit(VoxelSide.FRONT);
-				addZ--;  
-			}
-			else 		{ 
-				lookAtPos.setDirection(Direction.SOUTH);
-				lookAtPos.setHit(VoxelSide.BACK);
-				addZ++; 
-			}
-	    	lookAtPos.setLongZ(gps.getLongZ()+addZ);
-	    	lookAtPos.setDistance(distz);
-    	}
+		findShortestDistance(gps, pitch, yaw);
+//    	if(Math.abs(distx)<Math.abs(disty) && Math.abs(distx)<Math.abs(distz)){
+//			if(yaw<=180){ 
+//				lookAtPos.setDirection(Direction.EAST); 	
+//				lookAtPos.setHit(VoxelSide.LEFT);
+//				addX++;  
+//			}
+//			else 		{ 
+//				lookAtPos.setDirection(Direction.WEST);
+//				lookAtPos.setHit(VoxelSide.RIGHT);
+//				addX--;  
+//			}
+//	    	lookAtPos.setLongX(gps.getLongX()+addX);
+//	    	lookAtPos.setDistance(distx);
+//    	}else if(Math.abs(disty)<Math.abs(distz) && Math.abs(disty)<Math.abs(distx)){
+//			if(pitch<0)	{ 
+//				lookAtPos.setDirection(Direction.UP);
+//				lookAtPos.setHit(VoxelSide.BOTTOM);
+//				addY++;  
+//			}
+//			else 		{ 
+//				lookAtPos.setDirection(Direction.DOWN);
+//				lookAtPos.setHit(VoxelSide.TOP);
+//				addY--;  
+//			}  
+//	    	lookAtPos.setLongY(gps.getLongY()+addY);
+//	    	lookAtPos.setDistance(disty);
+//		}else{
+//			if((yaw>270)||(yaw<90))	{ 
+//				lookAtPos.setDirection(Direction.NORTH); 
+//				lookAtPos.setHit(VoxelSide.FRONT);
+//				addZ--;  
+//			}
+//			else 		{ 
+//				lookAtPos.setDirection(Direction.SOUTH);
+//				lookAtPos.setHit(VoxelSide.BACK);
+//				addZ++; 
+//			}
+//	    	lookAtPos.setLongZ(gps.getLongZ()+addZ);
+//	    	lookAtPos.setDistance(distz);
+//    	}
     	//HowILook=HowILook+dir+foundMaterialPos.toMString();
     	GL11.glColor3f(1.0f, 1.0f, 1.0f);
 		if (gps.getWorld().getVoxel(lookAtPos) != Material.m_air){
@@ -204,6 +213,48 @@ private void calculateDistance(GPS gps){
 	else 			{distz = ((-1-(gps.getZ() % 1))+addZ)/radz;}			// north
 }
 
+private void findShortestDistance(GPS gps, float pitch, float yaw){
+	if(Math.abs(distx)<Math.abs(disty) && Math.abs(distx)<Math.abs(distz)){
+		if(yaw<=180){ 
+			lookAtPos.setDirection(Direction.EAST); 	
+			lookAtPos.setHit(VoxelSide.LEFT);
+			addX++;  
+		}
+		else 		{ 
+			lookAtPos.setDirection(Direction.WEST);
+			lookAtPos.setHit(VoxelSide.RIGHT);
+			addX--;  
+		}
+    	lookAtPos.setLongX(gps.getLongX()+addX);
+    	lookAtPos.setDistance(distx);
+	}else if(Math.abs(disty)<Math.abs(distz) && Math.abs(disty)<Math.abs(distx)){
+		if(pitch<0)	{ 
+			lookAtPos.setDirection(Direction.UP);
+			lookAtPos.setHit(VoxelSide.BOTTOM);
+			addY++;  
+		}
+		else 		{ 
+			lookAtPos.setDirection(Direction.DOWN);
+			lookAtPos.setHit(VoxelSide.TOP);
+			addY--;  
+		}  
+    	lookAtPos.setLongY(gps.getLongY()+addY);
+    	lookAtPos.setDistance(disty);
+	}else{
+		if((yaw>270)||(yaw<90))	{ 
+			lookAtPos.setDirection(Direction.NORTH); 
+			lookAtPos.setHit(VoxelSide.FRONT);
+			addZ--;  
+		}
+		else 		{ 
+			lookAtPos.setDirection(Direction.SOUTH);
+			lookAtPos.setHit(VoxelSide.BACK);
+			addZ++; 
+		}
+    	lookAtPos.setLongZ(gps.getLongZ()+addZ);
+    	lookAtPos.setDistance(distz);
+	}
+}
 
 public  GPS cd2(GPS gps, float pitch, float yaw, int maxDistance, moveDir dir){
 	addX=0;
@@ -280,12 +331,64 @@ public  GPS cd2(GPS gps, float pitch, float yaw, int maxDistance, moveDir dir){
 	return lookAtPos;
 }
 
+
+
+
 public void cd(float time, float yaw, float pitch, float distance, moveDir dir){
 	// I have my x,y,z position
+	// calculate speed
+	calculateSpeed(pitch, yaw);
 	// calculate desired x,y,z position
-	// check first border crossover
-	// if border crossover > desired position, return desired position
-	// 
+	// calculate all eight bounding box coordinates
+	boundingBox[GPS.BoxVertice.BLF.ordinal()]
+			.clone(this)
+			.moveRelative((this.getWidth()/2), moveDir.LEFT, pitch, yaw)		// Bottom LEFT Forward
+			.moveRelative((this.getDepht()/2), moveDir.FORWARD, pitch, yaw);
+	boundingBox[GPS.BoxVertice.BRF.ordinal()]
+			.clone(this)
+			.moveRelative((this.getWidth()/2), moveDir.RIGHT, pitch, yaw)		// Bottom RIGHT Forward
+			.moveRelative((this.getDepht()/2), moveDir.FORWARD, pitch, yaw);
+	boundingBox[GPS.BoxVertice.BLB.ordinal()]
+			.clone(this)
+			.moveRelative((this.getWidth()/2), moveDir.LEFT, pitch, yaw)		// Bottom LEFT Backward
+			.moveRelative((this.getDepht()/2), moveDir.BACKWARD, pitch, yaw);
+	boundingBox[GPS.BoxVertice.BRB.ordinal()]
+			.clone(this)
+			.moveRelative((this.getWidth()/2), moveDir.RIGHT, pitch, yaw)		// Bottom RIGHT Backward
+			.moveRelative((this.getDepht()/2), moveDir.BACKWARD, pitch, yaw);
+	boundingBox[GPS.BoxVertice.TLF.ordinal()]
+			.clone(boundingBox[GPS.BoxVertice.BLF.ordinal()])					// Top LEFT Forward
+			.moveRelative(this.getHeight(), moveDir.UP, pitch, yaw);	
+	boundingBox[GPS.BoxVertice.TRF.ordinal()]
+			.clone(boundingBox[GPS.BoxVertice.BRF.ordinal()])					// Top RIGHT Forward
+			.moveRelative(this.getHeight(), moveDir.UP, pitch, yaw);
+	boundingBox[GPS.BoxVertice.TLB.ordinal()]
+			.clone(boundingBox[GPS.BoxVertice.BLB.ordinal()])					// Top LEFT Backward
+			.moveRelative(this.getHeight(), moveDir.UP, pitch, yaw);
+	boundingBox[GPS.BoxVertice.TRB.ordinal()]
+			.clone(boundingBox[GPS.BoxVertice.BRB.ordinal()])					// Top RIGHT Backward
+			.moveRelative(this.getHeight(), moveDir.UP, pitch, yaw);
+	
+	
+	
+	
+	boundingBox[GPS.BoxVertice.BLF.ordinal()].setFloatX((this.getX()+((this.getWidth()/2) * (float)Math.sin(Math.toRadians(yaw-90)))));
+	boundingBox[GPS.BoxVertice.BLF.ordinal()].setFloatY((this.getY()-((this.getWidth()/2)) * (float)Math.cos(Math.toRadians(yaw-90))));
+	//  Top left
+	boundingBox[GPS.BoxVertice.BLF.ordinal()].clone(boundingBox[GPS.BoxVertice.BLF.ordinal()]); 
+	boundingBox[1].setFloatY(this.getY()+this.getHeight());
+	// Bottom right
+	boundingBox[2].clone(this); 
+	boundingBox[2].setFloatX((this.getX()+((this.getWidth()/2) * (float)Math.sin(Math.toRadians(yaw+90)))));
+	boundingBox[2].setFloatY((this.getY()-((this.getWidth()/2)) * (float)Math.cos(Math.toRadians(yaw+90))));
+	// Top right
+	boundingBox[3].clone(boundingBox[2]); 
+	boundingBox[3].setFloatY(this.getY()+this.getHeight());
+    // calculate distance to nearest voxel edge
+	calculateDistance(tempPos);
+
+	// Loop
+	//   run lookAt for all four bounding box corners  
 	
 }
 

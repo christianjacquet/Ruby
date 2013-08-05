@@ -463,6 +463,25 @@ public class GameLoopText {
     	drawVoxelIndex(a, 0.1f);
     }
     
+    // This draws a box using the gps positions for its six corners
+    public void drawBox(GPS[] gps){
+    	GL11.glBegin(GL11.GL_LINES);
+        GL11.glLineWidth(10.0f);
+        // Front
+		GL11.glVertex3f(gps[GPS.BoxVertice.BLF.ordinal()].getX(), gps[GPS.BoxVertice.BLF.ordinal()].getY(), gps[GPS.BoxVertice.BLF.ordinal()].getZ());
+        GL11.glVertex3f(gps[GPS.BoxVertice.BRF.ordinal()].getX(), gps[GPS.BoxVertice.BRF.ordinal()].getY(), gps[GPS.BoxVertice.BRF.ordinal()].getZ());        
+        GL11.glVertex3f(gps[GPS.BoxVertice.BRF.ordinal()].getX(), gps[GPS.BoxVertice.BRF.ordinal()].getY(), gps[GPS.BoxVertice.BRF.ordinal()].getZ());
+        GL11.glVertex3f(gps[GPS.BoxVertice.TRF.ordinal()].getX(), gps[GPS.BoxVertice.TRF.ordinal()].getY(), gps[GPS.BoxVertice.TRF.ordinal()].getZ());
+        GL11.glVertex3f(gps[GPS.BoxVertice.TRF.ordinal()].getX(), gps[GPS.BoxVertice.TRF.ordinal()].getY(), gps[GPS.BoxVertice.TRF.ordinal()].getZ());
+        GL11.glVertex3f(gps[GPS.BoxVertice.TLF.ordinal()].getX(), gps[GPS.BoxVertice.TLF.ordinal()].getY(), gps[GPS.BoxVertice.TLF.ordinal()].getZ());
+        GL11.glVertex3f(gps[GPS.BoxVertice.TLF.ordinal()].getX(), gps[GPS.BoxVertice.TLF.ordinal()].getY(), gps[GPS.BoxVertice.TLF.ordinal()].getZ());
+        GL11.glVertex3f(gps[GPS.BoxVertice.BLF.ordinal()].getX(), gps[GPS.BoxVertice.BLF.ordinal()].getY(), gps[GPS.BoxVertice.BLF.ordinal()].getZ());
+
+        GL11.glEnd();
+    
+    }
+    
+    
     public void drawVoxelIndex(Vector3f a, float index) { 
     	a.setX(a.getX()-0);
     	a.setY(a.getY()+1);
@@ -473,8 +492,6 @@ public class GameLoopText {
         GL11.glBegin(GL11.GL_LINES);
         GL11.glLineWidth(10.0f);
         // Top
-
-
 		GL11.glVertex3f(a.x-indexa, a.y+indexa, a.z+indexa);
         GL11.glVertex3f(a.x-indexa, a.y+indexa, a.z+indexb);        
         GL11.glVertex3f(a.x+indexb, a.y+indexa, a.z+indexa);

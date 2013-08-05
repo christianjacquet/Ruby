@@ -4,10 +4,13 @@ import java.text.DecimalFormat;
 
 import org.lwjgl.util.vector.Vector3f;
 
+import com.digitalemu.monster.MovableEntity.moveDir;
+
 public class GPS extends Vector3f{
 	private static final long serialVersionUID = 1L;
 	World world;
 	short material=-1;
+	public enum BoxVertice {BLF, BLB, BRF, BRB, TLF, TLB, TRF, TRB } 
 	public enum VoxelSide { UNKNOWN, LEFT, RIGHT, FRONT, BACK, TOP, BOTTOM }
 	public enum Direction { UNKNOWN, NORTH, SOUTH, EAST, WEST, UP, DOWN}
 	private VoxelSide hit = VoxelSide.UNKNOWN;
@@ -73,7 +76,7 @@ public class GPS extends Vector3f{
 		this.longZ=(long)vector.z;
 	}
 	
-	public void clone(GPS gps){
+	public GPS clone(GPS gps){
 		this.x = gps.getX();
 		this.y = gps.getY();
 		this.z = gps.getZ();
@@ -85,6 +88,7 @@ public class GPS extends Vector3f{
 		this.direction = gps.getDirection();
 		this.material = gps.getMaterial();
 		this.distance = gps.getDistance();
+		return this;
 	}
 	
 
@@ -298,6 +302,41 @@ public class GPS extends Vector3f{
 	}
 	
 
+	public GPS moveRelative(float distance, moveDir dir, float pitch, float yaw){
+		switch (dir) {
+		case FORWARD : {
+			this.add2FloatX(distance * (float)Math.sin(Math.toRadians(yaw)));
+			this.add2FloatZ(0-(distance * (float)Math.cos(Math.toRadians(yaw))));
+	        break;
+		}
+		case LEFT : {
+			this.add2FloatX(distance * (float)Math.sin(Math.toRadians(yaw-90)));
+			this.add2FloatZ(0-(distance * (float)Math.cos(Math.toRadians(yaw-90))));
+			break;
+		}
+		case RIGHT : {
+			this.add2FloatX(distance * (float)Math.sin(Math.toRadians(yaw+90)));
+			this.add2FloatZ(0-(distance * (float)Math.cos(Math.toRadians(yaw+90))));
+			break;
+		}
+		case BACKWARD : {
+			this.add2FloatX(0-(distance * (float)Math.sin(Math.toRadians(yaw))));
+			this.add2FloatZ(distance * (float)Math.cos(Math.toRadians(yaw)));
+		}
+		case UP : {
+			this.add2FloatY(distance);
+			break;
+		}
+		case DOWN : {
+			this.add2FloatZ(0-distance);
+			break;
+		}
+		default : {
+			System.out.println("Exception in moveRelative, dir unspec. ");
+		}
+		}
+		return this;
+	}
 
 	
 
