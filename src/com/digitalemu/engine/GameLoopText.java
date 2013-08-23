@@ -34,10 +34,10 @@ import org.newdawn.slick.opengl.Texture;
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.ARBVertexBufferObject.*;
 import com.digitalemu.gui.Monitor;
-import com.digitalemu.monster.MovableEntity.moveDir;
 import com.digitalemu.monster.Player;
 import com.digitalemu.world.Material;
 
+import com.digitalemu.world.GPS.ASWDdir;
 import com.digitalemu.world.World;
 import com.digitalemu.world.GPS;
 import com.digitalemu.world.Textures;
@@ -760,12 +760,12 @@ public class GameLoopText {
         distance = (walkSpeed * elapsedTime)/1000;
         //distance = detectCollision(position,distance, 2);
         //if (distance>0.9f){ msg("Distance exceeded : "+distance); distance = 0.9f; }
-        if((Keyboard.isKeyDown(Keyboard.KEY_D))&& (lastused!=1)){ player.detectCollision(distance, yaw+90, pitch, moveDir.RIGHT); lastused=1;}
-        if((Keyboard.isKeyDown(Keyboard.KEY_Q))&& (lastused!=2)){ player.detectCollision(distance, yaw-90, pitch, moveDir.UP); lastused=2; }
-        if((Keyboard.isKeyDown(Keyboard.KEY_S))&& (lastused!=3)){ player.detectCollision(distance, yaw+180, pitch, moveDir.BACKWARD); lastused=3 ; }
-        if((Keyboard.isKeyDown(Keyboard.KEY_A))&& (lastused!=4)){ player.detectCollision(distance, yaw-90, pitch, moveDir.LEFT); lastused=4;}
-        if((Keyboard.isKeyDown(Keyboard.KEY_E))&& (lastused!=5)){ player.detectCollision(distance, yaw, pitch+90, moveDir.DOWN); lastused=5; }
-        if((Keyboard.isKeyDown(Keyboard.KEY_W))&& (lastused!=6)){ player.detectCollision(distance, yaw, pitch, moveDir.FORWARD); lastused=6; }
+        if((Keyboard.isKeyDown(Keyboard.KEY_D))&& (lastused!=1)){ player.moveEntity(distance, yaw, pitch, ASWDdir.RIGHT); lastused=1;}
+        if((Keyboard.isKeyDown(Keyboard.KEY_Q))&& (lastused!=2)){ player.moveEntity(distance, yaw, pitch, ASWDdir.UP); lastused=2; }
+        if((Keyboard.isKeyDown(Keyboard.KEY_S))&& (lastused!=3)){ player.moveEntity(distance, yaw, pitch, ASWDdir.BACKWARD); lastused=3 ; }
+        if((Keyboard.isKeyDown(Keyboard.KEY_A))&& (lastused!=4)){ player.moveEntity(distance, yaw, pitch, ASWDdir.LEFT); lastused=4;}
+        if((Keyboard.isKeyDown(Keyboard.KEY_E))&& (lastused!=5)){ player.moveEntity(distance, yaw, pitch+90, ASWDdir.DOWN); lastused=5; }
+        if((Keyboard.isKeyDown(Keyboard.KEY_W))&& (lastused!=6)){ player.moveEntity(distance, yaw, pitch, ASWDdir.FORWARD); lastused=6; }
         if((Keyboard.isKeyDown(Keyboard.KEY_NUMPAD7))&& (lastused!=7)){ yaw++; lastused=7; }
         if((Keyboard.isKeyDown(Keyboard.KEY_NUMPAD8))&& (lastused!=8)){ yaw--; lastused=8; }
         if((Keyboard.isKeyDown(Keyboard.KEY_NUMPAD9))&& (lastused!=9)){ pitch++; lastused=9; }

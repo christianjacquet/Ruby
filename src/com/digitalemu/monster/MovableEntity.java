@@ -1,6 +1,5 @@
 package com.digitalemu.monster;
 
-import java.util.Arrays;
 
 import org.lwjgl.opengl.GL11;
 
@@ -12,9 +11,7 @@ public class MovableEntity extends GPS{
 	private String name;
 	private float lookAtYaw;
 	private float lookAtPitch;
-	private float MoveYaw;
-	private float MovePitch;
-	private float horizontalSpeed=1;
+	private float horizontalSpeed=0.2f;
 	private float minHorizontalSpeed = 0.1f;
 	private float verticalSpeed=0;
 	private float horizontalForce=0;
@@ -22,12 +19,15 @@ public class MovableEntity extends GPS{
 	private float acceleration=1;
 	private float deceleration=1;
 	private float collisionRebounce=0;
-	private moveDir direction=moveDir.UNKNOWN;
 	private float yaw = 0;
 	private float pitch = 0;
+	private ASWDdir aswd;
 	private float height= 1.8f;
 	private float width=0.5f;
-	private float depht=0.5f;
+	private float depth=0.5f;
+	private float halfWidth=width/2;
+	private float halfDepth=depth/2f;
+	private float halfHeight=height/2;
 	private float gravity = 9.82f;
 	
 	// LookAt fields
@@ -39,41 +39,21 @@ public class MovableEntity extends GPS{
     public GPS			lookAtPos = new GPS();
 	public static float radx, rady, radz, distx, distz, disty;		
 	
-	// collisionDetect fields
-	public enum moveDir {UNKNOWN, FORWARD, BACKWARD, LEFT, RIGHT, UP, DOWN};
-	private float[]		colDist;
-	private GPS[]		colDistGps;
-    public GPS			collisionPos = new GPS();
-    int i = 0;
-
-    // CD2 fields
-    public final int axelX=0;
-    public final int axelY=0;
-    public final int axelZ=0;
-
-    GPS wantedPos = new GPS();
-    GPS tempPos = new GPS();
-    GPS[] boundingBox;
-    float[] speed;
-    float[] distance;
-    
+	// CollisionDetect fields
+	private boolean blockX, blockY, blockZ;
+	private float	dist2XBorder, dist2YBorder, dist2ZBorder;
+	private float	reqDistance;
+	private boolean positionFound;
+	private Direction CDDir;
+	private GPS		CDpos = new GPS();
+	private float   CDYaw;
+	private float	CDPitch;
+	public enum Quadrant { NORTHEAST, SOUTHEAST, SOUTHWEST, NORTWEST }
+	private Quadrant quadrant;
 	
 public MovableEntity(String name, GPS gps){
-	boundingBox[0] = new GPS();
-	boundingBox[1] = new GPS();
-	boundingBox[2] = new GPS();
-	boundingBox[3] = new GPS();
-	speed = new float[3];
-	distance = new float[3];
-	colDistGps = new GPS[4];
-	colDistGps[0] = new GPS();
-	colDistGps[1] = new GPS();
-	colDistGps[2] = new GPS();
-	colDistGps[3] = new GPS();
-	colDist = new float[4];
 	this.name = name;
 	this.clone(gps);
-	System.out.println("world:"+this.getWorld().getChunkBase());
 }
 
 /**
@@ -122,77 +102,21 @@ public  GPS lookAt(GPS gps, float pitch, float yaw, int maxDistance){
 	HowILook="";
 	lookAtMaterialFound=false;
 	foundMaterial = -1;
-	//System.out.println("L-at: "+gps.tofString()); 
-
 	HowILook=HowILook+"["+(int)gps.getX()+"]["+(int)gps.getZ()+"]["+(int)gps.getY()+"] "; 
 	lookAtPos.clone(this);
 	lookAtPos.setDirection(Direction.UNKNOWN);
 	lookAtPos.setHit(VoxelSide.UNKNOWN);
-	//System.out.println(lookAtPos.tofString()+" pitch: "+(int)pitch+" yaw: "+(int)yaw+" dist: "+maxDistance+" lookat");
-	// Calculate speed in x,z and y direction
 	calculateSpeed(pitch, yaw);
-//	rady = (float)Math.sin(Math.toRadians(pitch));
-//	radx = (float)Math.sin(Math.toRadians(yaw))*(float)(Math.cos(Math.toRadians(pitch)));
-//	radz = (float)Math.cos(Math.toRadians(yaw))*(float)(Math.cos(Math.toRadians(pitch)));
 	do {
-    	// Calculate distance to next x,z and y depending on gps and speed
-		calculateDistance(gps);
-//    	if (radx < 0)	{distx = ((gps.getX() % 1)-addX)/radx;}					// west 
-//    	else 			{distx = ((1-(gps.getX() % 1))+addX)/radx;}				// east
-//    	if (rady < 0)	{disty = ((1-(gps.getY() % 1))+addY)/rady;}				// up
-//    	else 			{disty = ((gps.getY() % 1)-addY)/rady;}					// down
-//    	if (radz < 0)	{distz = ((gps.getZ() % 1)-addZ)/radz;}					// south
-//    	else 			{distz = ((-1-(gps.getZ() % 1))+addZ)/radz;}			// north
-    	// Calculate shortest distance
-		findShortestDistance(gps, pitch, yaw);
-//    	if(Math.abs(distx)<Math.abs(disty) && Math.abs(distx)<Math.abs(distz)){
-//			if(yaw<=180){ 
-//				lookAtPos.setDirection(Direction.EAST); 	
-//				lookAtPos.setHit(VoxelSide.LEFT);
-//				addX++;  
-//			}
-//			else 		{ 
-//				lookAtPos.setDirection(Direction.WEST);
-//				lookAtPos.setHit(VoxelSide.RIGHT);
-//				addX--;  
-//			}
-//	    	lookAtPos.setLongX(gps.getLongX()+addX);
-//	    	lookAtPos.setDistance(distx);
-//    	}else if(Math.abs(disty)<Math.abs(distz) && Math.abs(disty)<Math.abs(distx)){
-//			if(pitch<0)	{ 
-//				lookAtPos.setDirection(Direction.UP);
-//				lookAtPos.setHit(VoxelSide.BOTTOM);
-//				addY++;  
-//			}
-//			else 		{ 
-//				lookAtPos.setDirection(Direction.DOWN);
-//				lookAtPos.setHit(VoxelSide.TOP);
-//				addY--;  
-//			}  
-//	    	lookAtPos.setLongY(gps.getLongY()+addY);
-//	    	lookAtPos.setDistance(disty);
-//		}else{
-//			if((yaw>270)||(yaw<90))	{ 
-//				lookAtPos.setDirection(Direction.NORTH); 
-//				lookAtPos.setHit(VoxelSide.FRONT);
-//				addZ--;  
-//			}
-//			else 		{ 
-//				lookAtPos.setDirection(Direction.SOUTH);
-//				lookAtPos.setHit(VoxelSide.BACK);
-//				addZ++; 
-//			}
-//	    	lookAtPos.setLongZ(gps.getLongZ()+addZ);
-//	    	lookAtPos.setDistance(distz);
-//    	}
-    	//HowILook=HowILook+dir+foundMaterialPos.toMString();
+	calculateDistance(gps);
+	findShortestDistance(gps, pitch, yaw);
     	GL11.glColor3f(1.0f, 1.0f, 1.0f);
-		if (gps.getWorld().getVoxel(lookAtPos) != Material.m_air){
-			foundMaterial=gps.getWorld().getVoxel(lookAtPos);
-			lookAtMaterialFound=true;
-			lookAtPos.setMaterial(gps.getWorld().getVoxel(lookAtPos));
-			return lookAtPos;
-		}
+	if (gps.getWorld().getVoxel(lookAtPos) != Material.m_air){
+	foundMaterial=gps.getWorld().getVoxel(lookAtPos);
+	lookAtMaterialFound=true;
+	lookAtPos.setMaterial(gps.getWorld().getVoxel(lookAtPos));
+	return lookAtPos;
+	}
 	} while (Math.abs(addX)<maxDistance && Math.abs(addY)<maxDistance && Math.abs(addZ)<maxDistance);
 	return lookAtPos;
 }
@@ -256,492 +180,338 @@ private void findShortestDistance(GPS gps, float pitch, float yaw){
 	}
 }
 
-public  GPS cd2(GPS gps, float pitch, float yaw, int maxDistance, moveDir dir){
-	addX=0;
-	addY=0;
-	addZ=0;
+// Collision Detect
 
-	wantedPos.clone(this);
-	wantedPos.setDirection(Direction.UNKNOWN);
-	wantedPos.setHit(VoxelSide.UNKNOWN);
-	
-	// Calculate speed in x,y and z direction
-	calculateSpeed(pitch, yaw);
-	switch (dir){
-	case FORWARD : {
-		wantedPos.add2FloatX(this.getWidth()/2);
-	}
-	}
-	// Calculate distance from my current position
-	calculateDistance(wantedPos);
-	
-	
-	do {
-    	// Calculate distance to next x,z and y border depending on this.gps and speed
-
-    	// Calculate shortest distance
-    	if(Math.abs(distx)<Math.abs(disty) && Math.abs(distx)<Math.abs(distz)){
-			if(yaw<=180){ 
-				wantedPos.setDirection(Direction.EAST); 	
-				wantedPos.setHit(VoxelSide.LEFT);
-				addX++;  
-			}
-			else 		{ 
-				wantedPos.setDirection(Direction.WEST);
-				wantedPos.setHit(VoxelSide.RIGHT);
-				addX--;  
-			}
-			wantedPos.setLongX(gps.getLongX()+addX);
-			wantedPos.setDistance(distx);
-    	}else if(Math.abs(disty)<Math.abs(distz) && Math.abs(disty)<Math.abs(distx)){
-			if(pitch<0)	{ 
-				wantedPos.setDirection(Direction.UP);
-				wantedPos.setHit(VoxelSide.BOTTOM);
-				addY++;  
-			}
-			else 		{ 
-				wantedPos.setDirection(Direction.DOWN);
-				wantedPos.setHit(VoxelSide.TOP);
-				addY--;  
-			}  
-			wantedPos.setLongY(gps.getLongY()+addY);
-			wantedPos.setDistance(disty);
-		}else{
-			if((yaw>270)||(yaw<90))	{ 
-				wantedPos.setDirection(Direction.NORTH); 
-				wantedPos.setHit(VoxelSide.FRONT);
-				addZ--;  
-			}
-			else 		{ 
-				wantedPos.setDirection(Direction.SOUTH);
-				wantedPos.setHit(VoxelSide.BACK);
-				addZ++; 
-			}
-			wantedPos.setLongZ(gps.getLongZ()+addZ);
-			wantedPos.setDistance(distz);
-    	}
-    	//HowILook=HowILook+dir+foundMaterialPos.toMString();
-		if (gps.getWorld().getVoxel(lookAtPos) != Material.m_air){
-			foundMaterial=gps.getWorld().getVoxel(lookAtPos);
-			lookAtMaterialFound=true;
-			lookAtPos.setMaterial(gps.getWorld().getVoxel(lookAtPos));
-			return lookAtPos;
-		}
-	} while (Math.abs(addX)<maxDistance && Math.abs(addY)<maxDistance && Math.abs(addZ)<maxDistance);
-	return lookAtPos;
+private Quadrant getQuadrant(){
+	if(yaw > 270)return Quadrant.NORTWEST;
+	if(yaw > 180)return Quadrant.SOUTHWEST;
+	if(yaw > 90) return Quadrant.SOUTHEAST;
+	return Quadrant.NORTHEAST;
 }
 
-
-
-
-public void cd(float time, float yaw, float pitch, float distance, moveDir dir){
-	// I have my x,y,z position
-	// calculate speed
-	calculateSpeed(pitch, yaw);
-	// calculate desired x,y,z position
-	// calculate all eight bounding box coordinates
-	boundingBox[GPS.BoxVertice.BLF.ordinal()]
-			.clone(this)
-			.moveRelative((this.getWidth()/2), moveDir.LEFT, pitch, yaw)		// Bottom LEFT Forward
-			.moveRelative((this.getDepht()/2), moveDir.FORWARD, pitch, yaw);
-	boundingBox[GPS.BoxVertice.BRF.ordinal()]
-			.clone(this)
-			.moveRelative((this.getWidth()/2), moveDir.RIGHT, pitch, yaw)		// Bottom RIGHT Forward
-			.moveRelative((this.getDepht()/2), moveDir.FORWARD, pitch, yaw);
-	boundingBox[GPS.BoxVertice.BLB.ordinal()]
-			.clone(this)
-			.moveRelative((this.getWidth()/2), moveDir.LEFT, pitch, yaw)		// Bottom LEFT Backward
-			.moveRelative((this.getDepht()/2), moveDir.BACKWARD, pitch, yaw);
-	boundingBox[GPS.BoxVertice.BRB.ordinal()]
-			.clone(this)
-			.moveRelative((this.getWidth()/2), moveDir.RIGHT, pitch, yaw)		// Bottom RIGHT Backward
-			.moveRelative((this.getDepht()/2), moveDir.BACKWARD, pitch, yaw);
-	boundingBox[GPS.BoxVertice.TLF.ordinal()]
-			.clone(boundingBox[GPS.BoxVertice.BLF.ordinal()])					// Top LEFT Forward
-			.moveRelative(this.getHeight(), moveDir.UP, pitch, yaw);	
-	boundingBox[GPS.BoxVertice.TRF.ordinal()]
-			.clone(boundingBox[GPS.BoxVertice.BRF.ordinal()])					// Top RIGHT Forward
-			.moveRelative(this.getHeight(), moveDir.UP, pitch, yaw);
-	boundingBox[GPS.BoxVertice.TLB.ordinal()]
-			.clone(boundingBox[GPS.BoxVertice.BLB.ordinal()])					// Top LEFT Backward
-			.moveRelative(this.getHeight(), moveDir.UP, pitch, yaw);
-	boundingBox[GPS.BoxVertice.TRB.ordinal()]
-			.clone(boundingBox[GPS.BoxVertice.BRB.ordinal()])					// Top RIGHT Backward
-			.moveRelative(this.getHeight(), moveDir.UP, pitch, yaw);
-	
-	
-	
-	
-	boundingBox[GPS.BoxVertice.BLF.ordinal()].setFloatX((this.getX()+((this.getWidth()/2) * (float)Math.sin(Math.toRadians(yaw-90)))));
-	boundingBox[GPS.BoxVertice.BLF.ordinal()].setFloatY((this.getY()-((this.getWidth()/2)) * (float)Math.cos(Math.toRadians(yaw-90))));
-	//  Top left
-	boundingBox[GPS.BoxVertice.BLF.ordinal()].clone(boundingBox[GPS.BoxVertice.BLF.ordinal()]); 
-	boundingBox[1].setFloatY(this.getY()+this.getHeight());
-	// Bottom right
-	boundingBox[2].clone(this); 
-	boundingBox[2].setFloatX((this.getX()+((this.getWidth()/2) * (float)Math.sin(Math.toRadians(yaw+90)))));
-	boundingBox[2].setFloatY((this.getY()-((this.getWidth()/2)) * (float)Math.cos(Math.toRadians(yaw+90))));
-	// Top right
-	boundingBox[3].clone(boundingBox[2]); 
-	boundingBox[3].setFloatY(this.getY()+this.getHeight());
-    // calculate distance to nearest voxel edge
-	calculateDistance(tempPos);
-
-	// Loop
-	//   run lookAt for all four bounding box corners  
-	
-}
-
-public void collisionDetect(float time, float yaw, float pitch, float distance, moveDir dir){
-	collisionPos.clone(this);
-	collisionPos.setDirection(Direction.UNKNOWN);
-	collisionPos.setHit(VoxelSide.UNKNOWN);
-	// Calculate speed in x,z and y direction
-	rady = (float)Math.sin(Math.toRadians(pitch));
-	radx = (float)Math.sin(Math.toRadians(yaw))*(float)(Math.cos(Math.toRadians(pitch)));
-	radz = (float)Math.cos(Math.toRadians(yaw))*(float)(Math.cos(Math.toRadians(pitch)));
-	do {
-    	// Calculate distance to next x,z and y depending on gps and speed
-    	if (radx < 0)	{distx = ((this.getX() % 1)-addX)/radx;}					// west 
-    	else 			{distx = ((1-(this.getX() % 1))+addX)/radx;}				// east
-    	if (rady < 0)	{disty = ((1-(this.getY() % 1))+addY)/rady;}				// up
-    	else 			{disty = ((this.getY() % 1)-addY)/rady;}					// down
-    	if (radz < 0)	{distz = ((this.getZ() % 1)-addZ)/radz;}					// south
-    	else 			{distz = ((-1-(this.getZ() % 1))+addZ)/radz;}				// north
-    	// Calculate shortest distance
-    	if(Math.abs(distx)<Math.abs(disty) && Math.abs(distx)<Math.abs(distz)){
-			if(yaw<=180){ 
-				collisionPos.setDirection(Direction.EAST); 	
-				collisionPos.setHit(VoxelSide.LEFT);
-				addX++;  
+/** Finds direction and distance to nearest voxel border regarding entity position,
+ *   yaw, pitch and entity width and height and filtering out blocked directions
+ *   Input: gps, yaw, pitch, width, height
+ *   Output: borderDirection, dist2XBorder, dist2YBorder, dist2ZBorder
+ */  
+private Direction getNearestBorderAndDistance(){
+	System.out.print(" X:"+blockX+" Y:"+blockY+" Z:"+blockZ+" rx:"+radx+" ry:"+rady+" rz:"+radz+" cx:"+CDpos.x+" cy:"+CDpos.y+" cz:"+CDpos.z);
+	if(blockX==false){
+		if (radx < 0)	{
+			if ((CDpos.x %1-halfWidth)<0){
+				dist2XBorder = (1+ ((CDpos.x % 1 - halfWidth)))  /radx; 				// west border cross
+			}																			 
+			else{
+				dist2XBorder = (   (CDpos.x % 1) - halfWidth)  /radx; 					// west
 			}
-			else 		{ 
-				collisionPos.setDirection(Direction.WEST);
-				collisionPos.setHit(VoxelSide.RIGHT);
-				addX--;  
-			}
-			collisionPos.setLongX(this.getLongX()+addX);
-			collisionPos.setDistance(distx);
-    	}else if(Math.abs(disty)<Math.abs(distz) && Math.abs(disty)<Math.abs(distx)){
-			if(pitch<0)	{ 
-				collisionPos.setDirection(Direction.UP);
-				collisionPos.setHit(VoxelSide.BOTTOM);
-				addY++;  
-			}
-			else 		{ 
-				collisionPos.setDirection(Direction.DOWN);
-				collisionPos.setHit(VoxelSide.TOP);
-				addY--;  
-			}  
-			collisionPos.setLongY(this.getLongY()+addY);
-			collisionPos.setDistance(disty);
-		}else{
-			if((yaw>270)||(yaw<90))	{ 
-				collisionPos.setDirection(Direction.NORTH); 
-				collisionPos.setHit(VoxelSide.FRONT);
-				addZ--;  
-			}
-			else 		{ 
-				collisionPos.setDirection(Direction.SOUTH);
-				collisionPos.setHit(VoxelSide.BACK);
-				addZ++; 
-			}
-			collisionPos.setLongZ(this.getLongZ()+addZ);
-			collisionPos.setDistance(distz);
-    	}
- 
-    	// Check if NOT solid ground below me
-    	if (collisionPos.getWorld().getVoxel(collisionPos.getLongX(), (collisionPos.getLongY()-1), collisionPos.getLongZ())==Material.m_air){
-    		
-    	}
-    	
-	} while (distance>collisionPos.getDistance());
-	switch (dir) {
-		case FORWARD : {
-			this.add2FloatX(distance * (float)Math.sin(Math.toRadians(yaw)));
-			this.add2FloatZ(0-(distance * (float)Math.cos(Math.toRadians(yaw))));
-			this.getY();
-			break;
 		}
-		case BACKWARD :{
-			this.add2FloatX(0-(distance * (float)Math.sin(Math.toRadians(yaw))));
-			this.add2FloatZ(distance * (float)Math.cos(Math.toRadians(yaw)));
-			break;
+		else 			{
+			if((CDpos.x+halfWidth)>1){
+				dist2XBorder = (1- ((CDpos.x % 1 + halfWidth)%1)) /radx; 				// east border cross
+			}
+			else {
+				dist2XBorder = (1- CDpos.x % 1 - halfWidth) /radx; 						// east
+			}
 		}
-		case LEFT : {
-			this.add2FloatX(distance * (float)Math.sin(Math.toRadians(yaw-90)));
-			this.add2FloatZ(0-(distance * (float)Math.cos(Math.toRadians(yaw-90))));
-			break;
-		}
-		case RIGHT : {
-			this.add2FloatX(distance * (float)Math.sin(Math.toRadians(yaw+90)));
-			this.add2FloatZ(0-(distance * (float)Math.cos(Math.toRadians(yaw+90))));
-			break;
-		}
+		dist2XBorder = Math.abs(dist2XBorder);
 	}
-}
-
-private GPS checkCollision(float yaw , float pitch, moveDir dir){
-	System.out.println("cPos1 "+collisionPos.tofString());
-
-	// Set depth depending on direction
-	switch (dir) {
-	case FORWARD : { 
-		collisionPos.setFloatZ(this.getZ()-(this.getDepht()/2));
-		break; }
-	case BACKWARD : {
-		collisionPos.setFloatZ(this.getZ()+(this.getDepht()/2));
-		break; }
-	case LEFT : {
-		collisionPos.setFloatZ(this.getZ()-(this.getWidth()/2));
-		break; }
-	case RIGHT : {
-		collisionPos.setFloatZ(this.getZ()+(this.getWidth()/2));
-		break; }
+	else dist2XBorder=500;
+	if(blockY==false){
+		if (rady < 0)	{dist2YBorder = (( (CDpos.y % 1) + halfHeight))/rady; }			// up
+		else 			{dist2YBorder = (1-(CDpos.y % 1) - halfHeight) /rady; }			// down
+	dist2YBorder = Math.abs(dist2YBorder);
 	}
-	System.out.println("cPos2 "+collisionPos.tofString());
-
-	// Find distance to first collision, if any, for each corner.
-	collisionPos.setFloatX(this.getX()-(this.getWidth()/2)); 	// lower left corner
-	colDistGps[0] = (lookAt(collisionPos, pitch, yaw, 5));
-	colDist[0] = Math.abs(colDistGps[0].getDistance());
-	collisionPos.setFloatX(this.getX()+(this.getWidth()/2));	// lower right corner
-	colDistGps[1] = (lookAt(collisionPos, pitch, yaw, 5));
-	colDist[1] = Math.abs(colDistGps[1].getDistance());
-	collisionPos.setFloatY(this.getY()+(this.getHeight()));		// upper right corner
-	colDistGps[2] = (lookAt(collisionPos, pitch, yaw, 5));
-	colDist[2] = Math.abs(colDistGps[2].getDistance());
-	collisionPos.setFloatX(this.getX()-(this.getWidth()/2));	// upper left corner
-	colDistGps[3] = (lookAt(collisionPos, pitch, yaw, 5));
-	colDist[3] = Math.abs(colDistGps[3].getDistance());
-	// Find shortest distance to collision, if any
-	System.out.println("cPos3 "+collisionPos.tofString());
-
-	Arrays.sort(colDist);
-	System.out.println("This: "+this.tofString()+"  "+dir.toString()); 
-	System.out.print("Cpos: "+collisionPos.tofString()+" pitch: "+(int)pitch+" yaw: "+(int)yaw+" dist: "+this.getDistance()+" ## ");
-	for(int i =0; i < 4;  i++){
-		System.out.print(" - "+colDist[i]);
+	else dist2YBorder=500;
+	if(blockZ==false){
+		if (radz < 0)	{dist2ZBorder = (    (CDpos.z % 1) + halfWidth)  /radz; }		// south
+		else{
+			System.out.print(" IF:"+(CDpos.z %1-halfWidth));
+			if ((CDpos.z %1-halfWidth)<=-1){
+				dist2ZBorder = (( 1- (halfWidth-(1+CDpos.z % 1))) /radz);  
+			}
+			else{
+				dist2ZBorder = (( 1+ (CDpos.z % 1) - halfWidth) /radz);  				// north
+			}
+		}
+		dist2ZBorder = Math.abs(dist2ZBorder);
 	}
-	System.out.println(" ...");
-	// Return shortest distance to collision, if any, or return requested distance
-	for(i =0; i < 4;  i++){
-		if((colDist[i]>0) && (colDist[i]<this.getDistance())){			// I hit something
-			colDistGps[i].setDistance(colDist[i]);
-			return colDistGps[i];
-		}
-	}
-	collisionPos.setHit(VoxelSide.UNKNOWN);
-	return collisionPos;
-}
-
-public void detectCollision(float elapsedTime, float yaw , float pitch, moveDir dir){
-	// TODO
-	// Take care of gravity and check if i fall down a hole.
-	// Take care of strafing left, right and going backwards.
-	// Take care of collision damage
-	// Take care of correcting path if I run with an angle into something
-	
-	// Calculate distance from elapsed time and horizontal speed
-	this.setDistance((horizontalSpeed * elapsedTime));
-	// Calculate pitch from elapsed time, gravity and vertical speed v= v+(9.81*time)
-	verticalSpeed = (verticalSpeed +(elapsedTime*gravity));
-	// Clone current position
-	collisionPos.clone(this);
-	// Check for collision
-	collisionPos = checkCollision(yaw , pitch, dir);
-	// If collision try sliding
-	if (collisionPos.getHit()!=VoxelSide.UNKNOWN){
-		System.out.println("Collision detected @ "+collisionPos.tofString());
-		if (collisionPos.getHit()==VoxelSide.BOTTOM) {		// I hit the ceiling
-			verticalSpeed=0;
-			collisionPos.add2FloatY(-0.01f);
-			// Maybe horizontal speed should decrease a little too?
-			this.setDistance((this.getDistance() - collisionPos.getDistance()) * (float)Math.sin(Math.toRadians(yaw)));
-			collisionPos = checkCollision(yaw , pitch, dir);
-		}
-		if (collisionPos.getHit()==VoxelSide.TOP) {			// I hit the floor
-			verticalSpeed=0;
-			collisionPos.setFloatX(0.0f);
-			// Maybe horizontal speed should decrease a little too?
-			this.setDistance((this.getDistance() - collisionPos.getDistance()) * (float)Math.sin(Math.toRadians(yaw)));
-			collisionPos = checkCollision(yaw , pitch, dir);
-		}
-		if (yaw < 90){
-			if (collisionPos.getHit()==VoxelSide.FRONT){
-				yaw=90;
-			}
-			else if (collisionPos.getHit()==VoxelSide.RIGHT){
-				yaw=0;
-			}
-			else { 
-				System.out.println("Helt fel. yaw "+yaw+" inte front eller right utan "+collisionPos.getHit().toString());
-			}
-			System.out.println("Collision detected @  old pos "+collisionPos.tofString());
-			// Set distance just before collision
-			collisionPos.setDistance(this.getDistance()-collisionPos.getDistance()-0.01f);
-			// Set new position 
-	        this.add2FloatX(collisionPos.getDistance() * (float)Math.sin(Math.toRadians(yaw)));
-	        this.add2FloatZ(0-(collisionPos.getDistance() * (float)Math.cos(Math.toRadians(yaw))));
-			System.out.println("Collision detected @  new pos "+this.tofString());
-			// Calculate sliding distance
-			this.setDistance((collisionPos.getDistance()) * (float)Math.sin(Math.toRadians(yaw)));
-			System.out.println("Collision detected @ new distance "+collisionPos.tofString());
-			collisionPos.clone(this);
-
-
-			collisionPos = checkCollision(yaw , pitch, dir);
-		}
-		else if(yaw < 180){
-			if (collisionPos.getHit()==VoxelSide.BACK){
-				yaw=270;
-			}
-			else if (collisionPos.getHit()==VoxelSide.RIGHT){
-				yaw=180;
-			}
-			else { 
-				System.out.println("Helt fel. yaw "+yaw+" inte back eller right utan "+collisionPos.getHit().toString());
-			}
-			this.setDistance((this.getDistance() - collisionPos.getDistance()) * (float)Math.sin(Math.toRadians(yaw)));
-			collisionPos = checkCollision(yaw , pitch, dir);
-		}
-		else if(yaw < 270){
-			if (collisionPos.getHit()==VoxelSide.BACK){
-				yaw=270;
-			}
-			else if (collisionPos.getHit()==VoxelSide.LEFT){
-				yaw=180;
-			}
-			else { 
-				System.out.println("Helt fel. yaw "+yaw+" inte back eller left utan "+collisionPos.getHit().toString());
-			}
-			this.setDistance((this.getDistance() - collisionPos.getDistance()) * (float)Math.sin(Math.toRadians(yaw)));
-			collisionPos = checkCollision(yaw , pitch, dir);
+	else dist2ZBorder=500;
+	System.out.print(" DX:"+dist2XBorder+" DY:"+dist2YBorder+" DZ:"+dist2ZBorder);
+	if(Math.abs(dist2XBorder)<Math.abs(dist2YBorder) && Math.abs(dist2XBorder)<Math.abs(dist2ZBorder)){  									// X shortest
+		if(radx<0) {
+			System.out.print(" West ");
+			CDDir=Direction.WEST;
 		}
 		else {
-			if (collisionPos.getHit()==VoxelSide.FRONT){
-				yaw=270;
-			}
-			else if (collisionPos.getHit()==VoxelSide.LEFT){
-				yaw=0;
-			}
-			else { 
-				System.out.println("Helt fel. yaw "+yaw+" inte front eller left utan "+collisionPos.getHit().toString());
-			}
-			this.setDistance((this.getDistance() - collisionPos.getDistance()) * (float)Math.sin(Math.toRadians(yaw)));
-			collisionPos = checkCollision(yaw , pitch, dir);
+			System.out.print(" East ");
+			CDDir=Direction.EAST;
 		}
+		return CDDir;
 	}
-	// Save new position
-	switch (dir) {
-		case FORWARD : {
-			this.add2FloatX(collisionPos.getDistance() * (float)Math.sin(Math.toRadians(yaw)));
-			this.add2FloatZ(0-(collisionPos.getDistance() * (float)Math.cos(Math.toRadians(yaw))));
-			this.getY();
-			break;
+	else if(Math.abs(dist2YBorder)<Math.abs(dist2XBorder) && Math.abs(dist2YBorder)<Math.abs(dist2ZBorder)){								// Y shortest
+		if(rady<0) {
+			System.out.print(" Up ");
+			CDDir=Direction.UP; 
 		}
-		case BACKWARD :{
-			this.add2FloatX(0-(collisionPos.getDistance() * (float)Math.sin(Math.toRadians(yaw))));
-			this.add2FloatZ(collisionPos.getDistance() * (float)Math.cos(Math.toRadians(yaw)));
-			break;
+		else {
+			System.out.print(" Down ");
+			CDDir=Direction.DOWN;
 		}
-		case LEFT : {
-			this.add2FloatX(collisionPos.getDistance() * (float)Math.sin(Math.toRadians(yaw-90)));
-			this.add2FloatZ(0-(collisionPos.getDistance() * (float)Math.cos(Math.toRadians(yaw-90))));
-			break;
+		return CDDir;
+	}
+	else {																					// Z shortest
+		if(radz<0) {
+			System.out.print(" South ");
+			CDDir=Direction.SOUTH; 
 		}
-		case RIGHT : {
-			this.add2FloatX(collisionPos.getDistance() * (float)Math.sin(Math.toRadians(yaw+90)));
-			this.add2FloatZ(0-(collisionPos.getDistance() * (float)Math.cos(Math.toRadians(yaw+90))));
-			break;
+		else {
+			System.out.print(" North ");
+			CDDir=Direction.NORTH;
 		}
+		return CDDir;
 	}
 }
 
-///**
-// * detectCollision takes current position and distance as input.
-// * It loops through every intermediate Voxel between start and stop.
-// * If a solid Voxel in the path is found, it returns the position immediately
-// * before the solid Voxel.
-// * @param startPos
-// * @param endPos
-// * @return
-// */
-//public float detectCollision( GPS gps, float distance, float yaw , float pitch, int i){
-//	addX=0;
-//	addY=0;
-//	addZ=0;
-//	distance+=.3f;
-//	System.out.print("Collision "+gps.toSString()+" D: "+distance+" yaw:"+yaw+" pitch:"+pitch);
-//	float totalDistance=0;
-//	lookAtPos.clone(gps);
-//	// Calculate speed in x,z and y direction
-//	rady = (float)Math.sin(Math.toRadians(pitch));
-//	radx = (float)Math.sin(Math.toRadians(yaw))*(float)(Math.cos(Math.toRadians(pitch)));
-//	radz = (float)Math.cos(Math.toRadians(yaw))*(float)(Math.cos(Math.toRadians(pitch)));
-//	do {
-//    	// Calculate distance to next x,z and y depending on gps and speed
-//    	if (radx < 0)	{distx = ((gps.getX() % 1)-addX)/radx;}					// west 
-//    	else 			{distx = ((1-(gps.getX() % 1))+addX)/radx;}				// east
-//    	if (rady < 0)	{disty = ((1-(gps.getY() % 1))+addY)/rady;}				// up
-//    	else 			{disty = ((gps.getY() % 1)-addY)/rady;}					// down
-//    	if (radz < 0)	{distz = ((gps.getZ() % 1)-addZ)/radz;}					// south
-//    	else 			{distz = ((-1-(gps.getZ() % 1))+addZ)/radz;}			// north
-//    	// Calculate shortest distance
-//    	if(Math.abs(distx)<Math.abs(disty) && Math.abs(distx)<Math.abs(distz)){
-//			if(yaw<=180){ 
-//				lookAtPos.setDirection(Direction.EAST); 	
-//				lookAtPos.setHit(VoxelSide.LEFT);
-//				addX++;  
-//			}
-//			else 		{ 
-//				lookAtPos.setDirection(Direction.WEST);
-//				lookAtPos.setHit(VoxelSide.RIGHT);
-//				addX--;  
-//			}
-//	    	lookAtPos.setLongX(this.getLongX()+addX);
-//	    	totalDistance = distx;
-//    	}else if(Math.abs(disty)<Math.abs(distz) && Math.abs(disty)<Math.abs(distx)){
-//			if(pitch<0)	{ 
-//				lookAtPos.setDirection(Direction.UP);
-//				lookAtPos.setHit(VoxelSide.BOTTOM);
-//				addY++;  
-//			}
-//			else 		{ 
-//				lookAtPos.setDirection(Direction.DOWN);
-//				lookAtPos.setHit(VoxelSide.TOP);
-//				addY--;  
-//			}  
-//	    	lookAtPos.setLongY(this.getLongY()+addY);
-//	    	totalDistance = disty;
-//		}else{
-//			if((yaw>270)||(yaw<90))	{ 
-//				lookAtPos.setDirection(Direction.NORTH); 
-//				lookAtPos.setHit(VoxelSide.FRONT);
-//				addZ--;  
-//			}
-//			else 		{ 
-//				lookAtPos.setDirection(Direction.SOUTH);
-//				lookAtPos.setHit(VoxelSide.BACK);
-//				addZ++; 
-//			}
-//	    	lookAtPos.setLongZ(this.getLongZ()+addZ);
-//	    	totalDistance = distz;
-//    	}
-//		if (this.getWorld().getVoxel(lookAtPos) != Material.m_air){
-//			// I ran into something, now I need to back off a little.
-//			// For X and Z it could be enough with totaldistance-=0.3f;
-//			// Need to check height also.
-//			System.out.print(" found "+this.getWorld().getVoxel(lookAtPos));
-//    		System.out.println(" TOT:"+Math.abs(totalDistance));
-//    		return Math.abs(totalDistance)-0.3f;
-//			//break;
-//		}
-//		System.out.print(" >"+Math.abs(totalDistance));
-//	} while (distance > Math.abs(totalDistance));
-//	System.out.println(" DST:"+distance);
-//		return distance-0.3f;
-//}
+private boolean isCloseToNorthBorder(){
+	System.out.print(" closeToNorth");
+	if(Math.abs(CDpos.z)%1 > (1-halfWidth)) { System.out.print("-true"); return true; }
+	else return false;
+}
+
+private boolean isCloseToSouthBorder(){
+	System.out.print(" closeToSouth");
+	if(Math.abs(CDpos.z)%1 < halfWidth) { System.out.print("-true"); return true; }
+	else return false;
+}
+
+private boolean isCloseToWestBorder(){
+	System.out.print(" closeToWest");
+	if(Math.abs(CDpos.x)%1 < halfWidth) { System.out.print("-true"); return true; }
+	else return false;
+}
+
+private boolean isCloseToEastBorder(){
+	System.out.print(" closeToEast");
+	if(Math.abs(CDpos.x)%1 > (1-halfWidth)) { System.out.print("-true"); return true; }
+	else return false;
+}
+
+private boolean northBorderBlocked(){
+	if	(CDpos.getWorld().getVoxelPlus(CDpos, 0,0,-1) != Material.m_air ||
+			(isCloseToWestBorder() && CDpos.getWorld().getVoxelPlus(CDpos, -1,0,-1) != Material.m_air) ||
+			(isCloseToEastBorder() && CDpos.getWorld().getVoxelPlus(CDpos, +1,0,-1) != Material.m_air)){
+			System.out.print(" blockZ");
+			return true;
+	}
+	return false;
+}
+private boolean eastBorderBlocked(){
+	if	(CDpos.getWorld().getVoxelPlus(CDpos, 1,0,0) != Material.m_air ||
+			(isCloseToNorthBorder() && CDpos.getWorld().getVoxelPlus(CDpos, 1,0,-1) != Material.m_air) ||
+			(isCloseToSouthBorder() && CDpos.getWorld().getVoxelPlus(CDpos, 1,0,+1) != Material.m_air)){
+			System.out.print(" blockX");
+			return true;
+	}
+	return false;
+}
+
+private boolean southBorderBlocked(){
+	if	(CDpos.getWorld().getVoxelPlus(CDpos, 0,0,+1) != Material.m_air ||
+			(isCloseToWestBorder() && CDpos.getWorld().getVoxelPlus(CDpos, -1,0,+1) != Material.m_air) ||
+			(isCloseToEastBorder() && CDpos.getWorld().getVoxelPlus(CDpos, +1,0,+1) != Material.m_air)){
+			System.out.print(" blockZ");
+			return true;
+	}
+	return false;
+}
+
+private boolean westBorderBlocked(){
+	if	(CDpos.getWorld().getVoxelPlus(CDpos, -1,0,0) != Material.m_air ||
+			(isCloseToNorthBorder() && CDpos.getWorld().getVoxelPlus(CDpos, -1,0,-1) != Material.m_air) ||
+			(isCloseToSouthBorder() && CDpos.getWorld().getVoxelPlus(CDpos, -1,0,+1) != Material.m_air)){
+				System.out.print(" blockX");
+				return true;
+	}
+	return false;
+}
+
+private boolean upBorderBlocked(){
+	return false;
+}
+private boolean downBorderBlocked(){
+	return false;
+}
+
+ 
+
+public void setNewPosition(float distance){
+//	CDpos.add2FloatX(distance * (float)Math.sin(Math.toRadians(yaw)));
+//	CDpos.add2FloatZ(0-(distance * (float)Math.cos(Math.toRadians(yaw))));
+	switch (aswd) {
+		case FORWARD : {
+			CDpos.add2FloatX(distance * (float)Math.sin(Math.toRadians(yaw)));
+			CDpos.add2FloatZ(0-(distance * (float)Math.cos(Math.toRadians(yaw))));
+			break;
+		}
+		case BACKWARD :{
+			CDpos.add2FloatX(0-(distance * (float)Math.sin(Math.toRadians(yaw))));
+			CDpos.add2FloatZ(distance * (float)Math.cos(Math.toRadians(yaw)));
+			break;
+		}
+		case LEFT : {
+			CDpos.add2FloatX(distance * (float)Math.sin(Math.toRadians(yaw-90)));
+			CDpos.add2FloatZ(0-(distance * (float)Math.cos(Math.toRadians(yaw-90))));
+			break;
+		}
+		case RIGHT : {
+			CDpos.add2FloatX(distance * (float)Math.sin(Math.toRadians(yaw+90)));
+			CDpos.add2FloatZ(0-(distance * (float)Math.cos(Math.toRadians(yaw+90))));
+			break;
+		}
+	case DOWN:
+		break;
+	case UNKNOWN:
+		break;
+	case UP:
+		break;
+	default:
+		break;
+	}
+	this.reqDistance -= (distance);
+	
+}
+
+
+private boolean collisionDetect(){
+getNearestBorderAndDistance();
+switch (CDDir) {
+case NORTH:	
+	if(reqDistance>dist2ZBorder){
+	    setNewPosition(dist2ZBorder);
+	    if(northBorderBlocked()){
+	    	blockZ=true;
+	    	if(getQuadrant()==Quadrant.NORTWEST) yaw=270;
+	    	else yaw=90;
+	    	calculateSpeed(pitch, yaw);
+	    	CDpos.add2FloatZ(0.02f); // back off slightly
+	    	return false; // Not done, continue
+	    }
+	    CDpos.add2FloatZ(-0.02f); // pass border slightly
+	    System.out.print(" Pass border:"+CDpos.tofString());
+	    return false; // Not done, continue
+	}
+	setNewPosition(reqDistance);
+	return true;
+case SOUTH:
+	if(reqDistance>dist2ZBorder){
+	    setNewPosition(dist2ZBorder);
+	    if(southBorderBlocked()){
+	    	blockZ=true;
+	    	if(getQuadrant()==Quadrant.SOUTHWEST) yaw=270;
+	    	else yaw=90;
+	    	calculateSpeed(pitch, yaw);
+	    	CDpos.add2FloatZ(-0.02f); // back off slightly
+	    	return false; // Not done, continue
+	    }
+	    CDpos.add2FloatZ(0.02f); // pass border slightly
+	    return false; // Not done, continue
+	}
+	setNewPosition(reqDistance);
+	return true;
+case WEST:
+	if(reqDistance>Math.abs(dist2XBorder)){
+	    setNewPosition(dist2XBorder);
+	    if(westBorderBlocked()){
+	    	blockX=true;
+	    	if(getQuadrant()==Quadrant.NORTWEST) yaw=0;
+	    	else yaw=180;
+	    	calculateSpeed(pitch, yaw);
+	    	CDpos.add2FloatX(0.02f); // back off slightly
+	    	return false; // Not done, continue
+	    }
+	    CDpos.add2FloatX(-0.02f); // pass border slightly
+	    return false; // Not done, continue
+	}
+	setNewPosition(reqDistance);
+	return true;
+case EAST:
+	if(reqDistance>dist2XBorder){
+	    setNewPosition(dist2XBorder);
+	    if(eastBorderBlocked()){
+		blockX=true;
+		if(getQuadrant()==Quadrant.NORTHEAST) yaw=0;
+    	else yaw=180;
+		calculateSpeed(pitch, yaw);
+    	CDpos.add2FloatX(-0.02f); // back off slightly
+		return false; // Not done, continue
+	    }
+	    CDpos.add2FloatX(0.02f); // pass border slightly
+	    return false; // Not done, continue
+	}
+	setNewPosition(reqDistance);
+	return true;
+case UP:
+	blockY=true;
+	return false;
+//	if(reqDistance>dist2YBorder){
+//	    setNewPosition(dist2YBorder);
+//	    if(upBorderBlocked()){
+//		blockY=true;
+//		return false; // Not done, continue
+//	    }
+//	    CDpos.add2FloatY(0.01f); // pass border slightly
+//	    return false; // Not done, continue
+//	}
+//	setNewPosition(reqDistance);
+//	return true;
+case DOWN:
+	blockY=true;
+	return false;
+//	if(reqDistance>dist2YBorder){
+//	    setNewPosition(dist2YBorder);
+//	    if(downBorderBlocked()){
+//		blockY=true;
+//		return false; // Not done, continue
+//	    }
+//	    CDpos.add2FloatY(-0.01f); // pass border slightly
+//	    return false; // Not done, continue
+//	}
+//	setNewPosition(reqDistance);
+//	return true;
+case UNKNOWN:
+	break;
+default:
+	break; 
+	}
+	return false;
+}
+
+public void moveEntity(float elapsedTime, float yaw, float pitch, ASWDdir aswd){
+	this.yaw=yaw;
+	this.pitch=pitch;
+	this.aswd=aswd;
+	this.reqDistance=horizontalSpeed * elapsedTime;
+	blockX=false;
+	blockY=false;
+	blockZ=false;
+	positionFound=false;
+	CDpos.clone(this);
+	calculateSpeed(pitch, yaw);
+	System.out.print("ME rqd:"+reqDistance);
+	int count=1;
+	do {
+		System.out.print(" ME["+count+"] RD:"+reqDistance);
+		positionFound=collisionDetect();
+		count++;
+		if(count>10){System.out.println("..."); System.out.println("krash"); positionFound=true; break;}
+		if (reqDistance<0.005f) break;
+		if (blockX==true && blockY==true && blockZ==true) break;
+		System.out.println(" ");
+	}while (positionFound==false);
+	System.out.println("NewPos: "+CDpos.tofString());
+	this.clone(CDpos);
+}
+
 
 
 	/**
@@ -756,18 +526,7 @@ public void detectCollision(float elapsedTime, float yaw , float pitch, moveDir 
 	public void setWidth(float width) {
 		this.width = width;
 	}
-	/**
-	 * @return the depht
-	 */
-	public float getDepht() {
-		return depht;
-	}
-	/**
-	 * @param depht the depht to set
-	 */
-	public void setDepht(float depht) {
-		this.depht = depht;
-	}
+
 	/**
 	 * @return the height
 	 */
@@ -855,12 +614,12 @@ public void detectCollision(float elapsedTime, float yaw , float pitch, moveDir 
 	/**
 	 * @param horizontalForce the horizontalForce to set
 	 */
-	public void setHorizontalForce(float horizontalForce, float yaw, float pitch, moveDir dir) {
-		this.horizontalForce = horizontalForce;
-		this.yaw = yaw;
-		this.pitch = pitch;
-		this.direction = dir;
-	}
+//	public void setHorizontalForce(float horizontalForce, float yaw, float pitch, MoveDir dir) {
+//		this.horizontalForce = horizontalForce;
+//		this.yaw = yaw;
+//		this.pitch = pitch;
+//		this.moveDir = dir;
+//	}
 
 
 

@@ -158,7 +158,16 @@ public class World {
 		int ew = (int) (gps.getLongX() - chunk.getGps().getLongX());
 		int sn = (int) (gps.getLongZ() - chunk.getGps().getLongZ());
 		int ud = (int) (gps.getLongY() - chunk.getGps().getLongY());
-		//msg("GPS: "+gps.gps2str()+" Chunk: "+chunk.getGps().gps2str()+" WE: "+ew+" SN: "+sn+" UD: "+ud+" Material: "+chunk.getVoxel(ew, sn, ew));
+		//System.out.print("GPS: "+gps.gps2str()+" Chunk: "+chunk.getGps().gps2str()+" X: "+ew+" Z: "+sn+" Y: "+ud+" Material: "+chunk.getVoxel(ew, sn, ew));
+		return chunk.getVoxel(ew, ud, sn);
+	}
+	
+	public short getVoxelPlus(GPS gps, int ewp, int udp, int snp){
+		Chunk3 chunk=getChunk(gps);
+		int ew = (int) (gps.getLongX() - chunk.getGps().getLongX()) + ewp;
+		int sn = (int) (gps.getLongZ() - chunk.getGps().getLongZ()) + snp;
+		int ud = (int) (gps.getLongY() - chunk.getGps().getLongY()) + udp;
+		System.out.print(" GVP Look:"+ew+":"+ud+":"+sn+" M:"+chunk.getVoxel(ew, ud, sn)+" ME:"+gps.getLongX()+":"+gps.getLongY()+":"+gps.getLongZ());
 		return chunk.getVoxel(ew, ud, sn);
 	}
 	

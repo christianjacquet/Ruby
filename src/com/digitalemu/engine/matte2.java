@@ -49,7 +49,8 @@ public class matte2 {
 //    			" gps%-0 "+((gps.y % 1)-0)+" x1 "+(((gps.y % 1)-0)/rady)+
 //    			" gps%-1 "+((gps.y % 1)-1)+" x2 "+(((gps.y % 1)-1)/rady));
 //    	DecimalFormat df = new DecimalFormat("#.##");
-//    	System.out.println(df.format(123.456));
+    	System.out.println("MOD"+((90-180)%360));
+    	
 
     	do {
     		try {
