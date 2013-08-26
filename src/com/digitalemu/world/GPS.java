@@ -180,16 +180,19 @@ public class GPS extends Vector3f{
 	public void setFloatX(float val){
 		this.x = val;
 		this.longX = this.longX - (this.longX % world.getChunkBase()) + (int) val;
+		System.out.print(" SETX:"+this.x);
 	}
 	
 	public void setFloatZ(float val){
 		this.z = val;
 		this.longZ = this.longZ - (this.longZ % world.getChunkBase()) + (int) val;
+		System.out.print(" SETZ:"+this.z);
 	}
 	
 	public void setFloatY(float val){
 		this.y = val;
 		this.longY = this.longY - (this.longY % world.getChunkBase()) + (int) val;
+		System.out.print(" SETY:"+this.y);
 	}
 	
 	public void up(){
