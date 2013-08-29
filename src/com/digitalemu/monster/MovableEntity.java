@@ -127,6 +127,9 @@ public  GPS lookAt(GPS gps, float pitch, float yaw, int maxDistance){
 	return lookAtPos;
 }
 
+private void sop(String str){
+	System.out.print(" "+str);
+}
 
 private void calculateSpeed(float pitch, float yaw){
 	rady = (float)Math.sin(Math.toRadians(pitch));
@@ -193,6 +196,29 @@ private Quadrant getQuadrant(){
 	if(yaw > 180)return Quadrant.SOUTHWEST;
 	if(yaw > 90) return Quadrant.SOUTHEAST;
 	return Quadrant.NORTHEAST;
+}
+
+private void calcBorderDistances(){
+	if (radx < 0){
+		if ((CDpos.x %1-halfWidth)<0) 	dist2XBorder = (1+ ((CDpos.x % 1 - halfWidth)))  /radx; 	// west border cross																		 
+		else 							dist2XBorder = (   (CDpos.x % 1) - halfWidth)  /radx; 		// west
+	}
+	else {
+		if((CDpos.x+halfWidth)>1) 		dist2XBorder = (1- ((CDpos.x % 1 + halfWidth)%1)) /radx; 	// east border cross
+		else 							dist2XBorder = (1- CDpos.x % 1 - halfWidth) /radx; 			// east
+	}
+	dist2XBorder = Math.abs(dist2XBorder);
+	if (radz < 0){
+		if(CDpos.z %1 + halfWidth > 0) 	dist2ZBorder = (-1-  ((CDpos.z % 1) + halfWidth))/radz;		// south border cross
+		else 							dist2ZBorder = (    ((CDpos.z % 1) + halfWidth))  /radz;	// south
+	}																				
+	else{
+		if ((CDpos.z %1-halfWidth)<-1) 	dist2ZBorder = (( 1- (halfWidth-(1+CDpos.z % 1)))/radz);	// north border cross 
+		else 							dist2ZBorder = (( 1+ (CDpos.z % 1) - halfWidth) /radz);  	// north
+	}
+	dist2ZBorder = Math.abs(dist2ZBorder);
+	System.out.print(" DX:"+dist2XBorder+" DY:"+dist2YBorder+" DZ:"+dist2ZBorder);
+
 }
 
 /** Finds direction and distance to nearest voxel border regarding entity position,
@@ -285,67 +311,67 @@ private Direction getNearestBorderAndDistance(){
 	}
 }
 private boolean isOnNorthBorder(){
-	System.out.print(" OnNorth");
+	//System.out.print(" OnNorth");
 	if(Math.abs(CDpos.z)%1 == (1-halfWidth)) { System.out.print("-Y"); return true; }
 	else return false;
 }
 
 private boolean isOnSouthBorder(){
-	System.out.print(" OnSouth");
+	//System.out.print(" OnSouth");
 	if(Math.abs(CDpos.z)%1 == halfWidth) { System.out.print("-Y"); return true; }
 	else return false;
 }
 
 private boolean isOnWestBorder(){
-	System.out.print(" OnWest");
+	//System.out.print(" OnWest");
 	if(Math.abs(CDpos.x)%1 == halfWidth) { System.out.print("-Y"); return true; }
 	else return false;
 }
 
 private boolean isOnEastBorder(){
-	System.out.print(" OnEast");
+	//System.out.print(" OnEast");
 	if(Math.abs(CDpos.x)%1 == (1-halfWidth)) { System.out.print("-Y"); return true; }
 	else return false;
 }
 
-private boolean crossedNorthBorder(){
-	System.out.print(" closeToNorth");
-	if(Math.abs(CDpos.z)%1 > (1-halfWidth)) { System.out.print("-true"); return true; }
+private boolean crossedNorthBorder(float z){
+	//System.out.print(" closeToNorth");
+	if(Math.abs(z)%1 > (1-halfWidth)) { System.out.print("-true"); return true; }
 	else return false;
 }
 
-private boolean crossedSouthBorder(){
-	System.out.print(" closeToSouth");
-	if(Math.abs(CDpos.z)%1 < halfWidth) { System.out.print("-true"); return true; }
+private boolean crossedSouthBorder(float z){
+	//System.out.print(" closeToSouth");
+	if(Math.abs(z)%1 < halfWidth) { System.out.print("-true"); return true; }
 	else return false;
 }
 
-private boolean crossedWestBorder(){
-	System.out.print(" closeToWest");
-	if(Math.abs(CDpos.x)%1 < halfWidth) { System.out.print("-true"); return true; }
+private boolean crossedWestBorder(float x){
+	//System.out.print(" closeToWest");
+	if(Math.abs(x)%1 < halfWidth) { System.out.print("-true"); return true; }
 	else return false;
 }
 
-private boolean crossedEastBorder(){
-	System.out.print(" closeToEast");
-	if(Math.abs(CDpos.x)%1 > (1-halfWidth)) { System.out.print("-true"); return true; }
+private boolean crossedEastBorder(float x){
+	//System.out.print(" closeToEast");
+	if(Math.abs(x)%1 > (1-halfWidth)) { System.out.print("-true"); return true; }
 	else return false;
 }
 
 private boolean northBorderBlocked(){
 	if	(isOnNorthBorder() && CDpos.getWorld().getVoxelPlus(CDpos, 0,0,-1) != Material.m_air ||
-		(crossedWestBorder() && CDpos.getWorld().getVoxelPlus(CDpos, -1,0,-1) != Material.m_air) ||
-		(crossedEastBorder() && CDpos.getWorld().getVoxelPlus(CDpos, +1,0,-1) != Material.m_air)){
-		System.out.print(" blockZnorth");
+		(crossedWestBorder(CDpos.x) && CDpos.getWorld().getVoxelPlus(CDpos, -1,0,-1) != Material.m_air) ||
+		(crossedEastBorder(CDpos.x) && CDpos.getWorld().getVoxelPlus(CDpos, +1,0,-1) != Material.m_air)){
+		//System.out.print(" blockZnorth");
 		return true;
 	}
 	return false;
 }
 private boolean eastBorderBlocked(){
 	if	(isOnEastBorder() && CDpos.getWorld().getVoxelPlus(CDpos, 1,0,0) != Material.m_air ||
-		(crossedNorthBorder() && CDpos.getWorld().getVoxelPlus(CDpos, 1,0,-1) != Material.m_air) ||
-		(crossedSouthBorder() && CDpos.getWorld().getVoxelPlus(CDpos, 1,0,+1) != Material.m_air)){
-		System.out.print(" blockXeast");
+		(crossedNorthBorder(CDpos.z) && CDpos.getWorld().getVoxelPlus(CDpos, 1,0,-1) != Material.m_air) ||
+		(crossedSouthBorder(CDpos.z) && CDpos.getWorld().getVoxelPlus(CDpos, 1,0,+1) != Material.m_air)){
+		//System.out.print(" blockXeast");
 		return true;
 	}
 	return false;
@@ -353,9 +379,9 @@ private boolean eastBorderBlocked(){
 
 private boolean southBorderBlocked(){
 	if	(isOnSouthBorder() && CDpos.getWorld().getVoxelPlus(CDpos, 0,0,+1) != Material.m_air ||
-		(crossedWestBorder() && CDpos.getWorld().getVoxelPlus(CDpos, -1,0,+1) != Material.m_air) ||
-		(crossedEastBorder() && CDpos.getWorld().getVoxelPlus(CDpos, +1,0,+1) != Material.m_air)){
-		System.out.print(" blockZsouth");
+		(crossedWestBorder(CDpos.x) && CDpos.getWorld().getVoxelPlus(CDpos, -1,0,+1) != Material.m_air) ||
+		(crossedEastBorder(CDpos.x) && CDpos.getWorld().getVoxelPlus(CDpos, +1,0,+1) != Material.m_air)){
+		//System.out.print(" blockZsouth");
 		return true;
 	}
 	return false;
@@ -363,9 +389,9 @@ private boolean southBorderBlocked(){
 
 private boolean westBorderBlocked(){
 	if	(isOnWestBorder() && CDpos.getWorld().getVoxelPlus(CDpos, -1,0,0) != Material.m_air ||
-		(crossedNorthBorder() && CDpos.getWorld().getVoxelPlus(CDpos, -1,0,-1) != Material.m_air) ||
-		(crossedSouthBorder() && CDpos.getWorld().getVoxelPlus(CDpos, -1,0,+1) != Material.m_air)){
-		System.out.print(" blockXwest");
+		(crossedNorthBorder(CDpos.z) && CDpos.getWorld().getVoxelPlus(CDpos, -1,0,-1) != Material.m_air) ||
+		(crossedSouthBorder(CDpos.z) && CDpos.getWorld().getVoxelPlus(CDpos, -1,0,+1) != Material.m_air)){
+		//System.out.print(" blockXwest");
 		return true;
 	}
 	return false;
@@ -414,27 +440,257 @@ public void setNewPosition(float distance){
 		break;
 	}
 	this.reqDistance -= (distance);
-	System.out.print(" SNP:"+yaw+"#"+CDpos.tofString());
-	
+	//System.out.print(" SNP:"+yaw+"#"+CDpos.tofString());	
 }
 
+private void slideEast(float distance){
+	if((CDpos.x%1)+distance<=(1-halfWidth)){
+		//sop("Slide east");
+		CDpos.add2FloatX(distance);
+	}
+	else{
+		float slideTemp=CDpos.x;
+		CDpos.setFloatX(((int)CDpos.x)+(1-halfWidth));
+		if(!eastBorderBlocked()){
+			CDpos.setFloatX(slideTemp+distance);
+		}
+	}
+}
+
+private void slideWest(float distance){
+	if((CDpos.x%1)-distance>=(halfWidth)){
+		//sop("Slide west");
+		CDpos.add2FloatX(0-distance);
+	}
+	else{
+		float slideTemp=CDpos.x;
+		CDpos.setFloatX(((int)CDpos.x)+halfWidth);
+		if(!westBorderBlocked()){
+			CDpos.setFloatX(slideTemp-distance);
+		}
+	}
+}
+
+private void slideNorth(float distance){
+	if(!crossedNorthBorder(CDpos.z%1-distance)){
+		//sop("Slide north");
+		CDpos.add2FloatZ(0-distance);
+	}
+	else{
+		float slideTemp=CDpos.z;
+		CDpos.setFloatZ(((int)CDpos.z)-(1-halfWidth));
+		if(!northBorderBlocked()){
+			CDpos.setFloatZ(slideTemp-distance);
+		}
+	}
+}
+
+private void slideSouth(float distance){
+	if(!crossedSouthBorder(CDpos.z%1+distance)){
+		//sop("Slide south");
+		CDpos.add2FloatZ(distance);
+	}
+	else{
+		float slideTemp=CDpos.z;
+		CDpos.setFloatZ(((int)CDpos.z)-(halfWidth));
+		if(!southBorderBlocked()){
+			CDpos.setFloatZ(slideTemp+distance);
+		}
+	}
+}
 
 private boolean collisionDetect(){
-	getNearestBorderAndDistance();
+	//getNearestBorderAndDistance();
+	calcBorderDistances();
+	float reqXpos = CDpos.getX()+(reqDistance * (float)Math.sin(Math.toRadians(yaw)));
+	float reqZpos = CDpos.getZ()+(0-(reqDistance * (float)Math.cos(Math.toRadians(yaw))));
+	switch(getQuadrant()){
+	case NORTHEAST:{ //sop("NORTHEAST");
+		if (isOnEastBorder() && eastBorderBlocked()){
+//			sop("IsOnEastBorder");
+			slideNorth(reqDistance);
+			return true;
+		}
+		if (dist2XBorder<dist2ZBorder){	//sop("DX<DZ");				// Distance to X border shorter than Z
+			if (dist2XBorder<reqDistance){ //sop("DX<RD");			// Distance to X border shorter than requested distance
+				setNewPosition(dist2XBorder);						// Move to east border
+				CDpos.setFloatX(((int)CDpos.x)+(1-halfWidth));		// Stay exactly on east border
+				if (blockXEast=eastBorderBlocked()){ //sop("XEbl");	// If I can not pass east border
+					slideNorth(Math.abs(reqZpos - CDpos.z));		// Slide north
+					return true;									// done
+				}
+				reqDistance -= dist2XBorder;						// Reduce requested distance with distance to X border
+				CDpos.add2FloatX(+0.001f);							// Move slightly passed the border.
+				return false;										// I can move past east border, not done yet.
+			}
+			else{												
+				setNewPosition(reqDistance);						// New position set.
+				return true;										// Done
+			}
+		}
+		else {	//sop("DZ<DX");										// Distance to Z border shorter than X
+			if (dist2ZBorder<reqDistance){	//sop("DZ<RD");			// Distance to Z border shorter than requested distance
+				setNewPosition(dist2ZBorder);						// Move to north border
+				CDpos.setFloatZ(((int)CDpos.z)-(1-halfWidth));		// Stay exactly on north border
+				if (blockZNorth=northBorderBlocked()){//sop("ZNbl");	// If I can not pass north border
+					slideEast(reqXpos - CDpos.x);					// Slide east
+					return true;									// Done
+				}
+				reqDistance -= dist2ZBorder;						// Reduce requested distance with distance to Z border
+				CDpos.add2FloatZ(-0.001f);							// Move slightly passed the border.
+				return false;										// I can move past north border, not done yet.
+			}
+			else{												
+				setNewPosition(reqDistance);						// New position set.
+				return true;										// Done
+			}		
+		}
+	}
+	case NORTWEST:{ //sop("NORTHWEST");
+		if (isOnWestBorder() && westBorderBlocked()){
+//			sop("IsOnWestBorder");
+			slideNorth(reqDistance);
+			return true;
+		}
+		if (dist2XBorder<dist2ZBorder){	//sop("DX<DZ");				// Distance to X border shorter than Z
+			if (dist2XBorder<reqDistance){ //sop("DX<RD");			// Distance to X border shorter than requested distance
+				setNewPosition(dist2XBorder);						// Move to west border
+				CDpos.setFloatX(((int)CDpos.x)+halfWidth);			// Stay exactly on west border
+				if (blockXWest=westBorderBlocked()){ //sop("XWbl");	// If I can not pass west border
+				slideNorth(Math.abs(reqZpos - CDpos.z));			// Slide north
+					return true;									// Done
+				}
+				reqDistance -= dist2XBorder;						// Reduce requested distance with distance to X border
+				CDpos.add2FloatX(-0.001f);							// Move slightly passed the border.
+				return false;										// I can move past east border, not done yet.
+			}
+			else{												
+				setNewPosition(reqDistance);						// New position set.
+				return true;										// Done
+			}
+		}
+		else {	//sop("DZ<DX");										// Distance to Z border shorter than X
+			if (dist2ZBorder<reqDistance){	//sop("DZ<RD");			// Distance to Z border shorter than requested distance
+				setNewPosition(dist2ZBorder);						// Move to north border
+				CDpos.setFloatZ(((int)CDpos.z)-(1-halfWidth));		// Stay exactly on north border
+				if (blockZNorth=northBorderBlocked()){//sop("ZNbl");	// If I can not pass north border
+					slideWest(Math.abs(reqXpos - CDpos.x));			// Slide west
+					return true;									// Done
+				}
+				reqDistance -= dist2ZBorder;						// Reduce requested distance with distance to Z border
+				CDpos.add2FloatZ(-0.001f);							// Move slightly passed the border.
+				return false;										// I can move past north border, not done yet.
+			}
+			else{												
+				setNewPosition(reqDistance);						// New position set.
+				return true;										// Done
+			}		
+		}
+	}
+	case SOUTHEAST:{ //sop("SOUTHEAST");
+		if (isOnEastBorder() && eastBorderBlocked()){
+//			sop("IsOnEastBorder");
+			slideSouth(reqDistance);
+			return true;
+		}
+		if (dist2XBorder<dist2ZBorder){	//sop("DX<DZ");				// Distance to X border shorter than Z
+			if (dist2XBorder<reqDistance){ //sop("DX<RD");			// Distance to X border shorter than requested distance
+				setNewPosition(dist2XBorder);						// Move to east border
+				CDpos.setFloatX(((int)CDpos.x)+(1-halfWidth));		// Stay exactly on east border
+				if (blockXEast=eastBorderBlocked()){ //sop("XEbl");	// If I can not pass east border
+					slideNorth(Math.abs(reqZpos - CDpos.z));		// Slide south
+					return true;									// Done
+				}
+				reqDistance -= dist2XBorder;						// Reduce requested distance with distance to X border
+				CDpos.add2FloatX(+0.001f);							// Move slightly passed the border.
+				return false;										// I can move past east border, not done yet.
+			}
+			else{												
+				setNewPosition(reqDistance);						// New position set.
+				return true;										// Done
+			}
+		}
+		else {	//sop("DZ<DX");										// Distance to Z border shorter than X
+			if (dist2ZBorder<reqDistance){	//sop("DZ<RD");			// Distance to Z border shorter than requested distance
+				setNewPosition(dist2ZBorder);						// Move to south border
+				CDpos.setFloatZ(((int)CDpos.z)-(halfWidth));		// Stay exactly on south border
+				if (blockZSouth=southBorderBlocked()){//sop("ZSbl");	// If I can not pass south border
+					slideEast(Math.abs(reqXpos - CDpos.x));			// Slide east
+					return true;									// Done
+				}
+				reqDistance -= dist2ZBorder;						// Reduce requested distance with distance to Z border
+				CDpos.add2FloatZ(+0.001f);							// Move slightly passed the border.
+				return false;										// I can move past north border, not done yet.
+			}
+			else{												
+				setNewPosition(reqDistance);						// New position set.
+				return true;										// Done
+			}		
+		}
+	}
+	case SOUTHWEST:{ //sop("SOUTHWEST");
+		if (isOnWestBorder() && westBorderBlocked()){
+//			sop("IsOnWestBorder");
+			slideSouth(reqDistance);
+			return true;
+		}
+		if (dist2XBorder<dist2ZBorder){	//sop("DX<DZ");				// Distance to X border shorter than Z
+			if (dist2XBorder<reqDistance){ //sop("DX<RD");			// Distance to X border shorter than requested distance
+				setNewPosition(dist2XBorder);						// Move to west border
+				CDpos.setFloatX(((int)CDpos.x)+(halfWidth));		// Stay exactly on west border
+				if (blockXWest=westBorderBlocked()){ //sop("XWbl");	// If I can not pass west border
+					slideSouth(Math.abs(reqZpos - CDpos.z));		// Slide south
+					return true;									// Done
+				}
+				reqDistance -= dist2XBorder;						// Reduce requested distance with distance to X border
+				CDpos.add2FloatX(-0.001f);							// Move slightly passed the border.
+				return false;										// I can move past east border, not done yet.
+			}
+			else{												
+				setNewPosition(reqDistance);						// New position set.
+				return true;										// Done
+			}
+		}
+		else {	//sop("DZ<DX");										// Distance to Z border shorter than X
+			if (dist2ZBorder<reqDistance){	//sop("DZ<RD");			// Distance to Z border shorter than requested distance
+				setNewPosition(dist2ZBorder);						// Move to south border
+				CDpos.setFloatZ(((int)CDpos.z)-(halfWidth));		// Stay exactly on south border
+				if (blockZSouth=southBorderBlocked()){//sop("ZSbl");	// If I can not pass south border
+					slideWest(Math.abs(reqXpos - CDpos.x));			// Slide east
+					return true;									// Done
+				}
+				reqDistance -= dist2ZBorder;						// Reduce requested distance with distance to Z border
+				CDpos.add2FloatZ(+0.001f);							// Move slightly passed the border.
+				return false;										// I can move past north border, not done yet.
+			}
+			else{												
+				setNewPosition(reqDistance);						// New position set.
+				return true;										// Done
+			}		
+		}
+	}
+	default:
+		break;
+	
+	}
+	return false;
+}
 
+private boolean collisionDetect2(){
+	getNearestBorderAndDistance();
 	switch (CDDir) {
 	case NORTH:	
 		System.out.print(" -North");
+		if(reqDistance<dist2ZBorder){
+			setNewPosition(reqDistance);
+			return true;
+		}
 		if(blockZNorth=northBorderBlocked()){
 			if(getQuadrant()==Quadrant.NORTWEST) yaw=270;
 	    	else yaw=90;
 	    	calculateSpeed(pitch, yaw);
 			return false;
-		}
-		if(reqDistance<dist2ZBorder){
-			setNewPosition(reqDistance);
-			return true;
-		}
+		}		
 		System.out.print(" -Short");
 	    setNewPosition(dist2ZBorder);
     	CDpos.setFloatZ(((int)CDpos.z)-(1-halfWidth));
@@ -541,10 +797,10 @@ public void moveEntity(float elapsedTime, float yaw, float pitch, ASWDdir aswd){
 	positionFound=false;
 	CDpos.clone(this);
 	calculateSpeed(pitch, yaw);
-	System.out.print("ME rqd:"+reqDistance);
+	//System.out.println("ME rqd:"+reqDistance);
 	int count=1;
 	do {
-		System.out.print(" ME["+count+"] RD:"+reqDistance+" Yaw:"+(int)yaw+" NSEWUD:");
+		//System.out.print(" ME["+count+"] RD:"+reqDistance+" Yaw:"+(int)this.yaw+" NSEWUD:");
 		if(blockZNorth)System.out.print("N"); else System.out.print("-");
 		if(blockZSouth)System.out.print("S"); else System.out.print("-");
 		if(blockXEast)System.out.print("E"); else System.out.print("-");
@@ -553,8 +809,11 @@ public void moveEntity(float elapsedTime, float yaw, float pitch, ASWDdir aswd){
 		if(blockYDown)System.out.print("D"); else System.out.print("-");
 
 		positionFound=collisionDetect();
+		//sop("yaw:::"+this.yaw);
+
 		count++;
 		if(count>10){System.out.println("..."); System.out.println("krash"); break;}
+		//System.out.print(" RD:"+reqDistance);
 		if (reqDistance<0.005f) break;
 		if ((blockXEast==true) || (blockXWest==true))
 			if ((blockYUp==true) || (blockYDown==true))
@@ -562,7 +821,7 @@ public void moveEntity(float elapsedTime, float yaw, float pitch, ASWDdir aswd){
 					break;
 		System.out.println(" ");
 	}while (positionFound==false);
-	System.out.println("Done: "+CDpos.tofString());
+	//System.out.println("Done: "+CDpos.tofString());
 	this.clone(CDpos);
 }
 
