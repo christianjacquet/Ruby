@@ -7,7 +7,7 @@ import com.digitalemu.world.Chunk3;
 import com.digitalemu.world.GPS;
 import com.digitalemu.world.Material;
 
-public class MovableEntity extends GPS{
+public class MovableEntity  extends GPS implements Runnable{
 	private String name;
 	private float lookAtYaw;
 	private float lookAtPitch;
@@ -66,7 +66,7 @@ public MovableEntity(String name, GPS gps){
  * 
  * @param elapsedTime
  */
-public void tick(float elapsedTime){
+public void tick(){
 	if (horizontalForce > horizontalSpeed){
 		horizontalSpeed += horizontalForce * acceleration;
 		if (horizontalSpeed > horizontalForce){
@@ -94,9 +94,9 @@ public void tick(float elapsedTime){
 	
 	
 	horizontalSpeed = horizontalForce * acceleration;
-	this.setDistance((horizontalSpeed * elapsedTime));
+	//this.setDistance((horizontalSpeed * elapsedTime));
 	// Calculate pitch from elapsed time, gravity and vertical speed v= v+(9.81*time)
-	verticalSpeed = (verticalSpeed +(elapsedTime*gravity));
+	//verticalSpeed = (verticalSpeed +(elapsedTime*gravity));
 }
 
 
@@ -952,6 +952,11 @@ public void moveEntity(float elapsedTime, float yaw, float pitch, ASWDdir aswd){
 		this.verticalForce = verticalForce;
 		this.yaw = yaw;
 		this.pitch = pitch;
+	}
+
+	@Override
+	public void run() {
+		System.out.println("Movable Entity "+this.name+" started on thread "+Thread.currentThread());	
 	}
 
 }

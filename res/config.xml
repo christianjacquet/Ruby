@@ -1,0 +1,67 @@
+<?xml version="1.0"?>
+<company>
+	<Settings id="world">
+		<Attribute	name="allowUserImages"	value="no"/>
+		<Attribute  name="chunkSize"		value="32"/>
+		<Attribute  name="P2P"				value="no"/>
+	</Settings>
+	<material id="1001">
+		<name>air</name>
+		<transparant>no</transparant>
+		<solid>yes</solid>
+		<strength>64</strength>
+	</material>
+	<BaseMaterial id="sand">
+		<Attribute 	name="transparant" 	value="no"/>
+		<Attribute 	name="solid" 		value="yes"/>
+		<Attribute 	name="burnable" 	value="no"/>
+		<Attribute 	name="conductive" 	value="no"/>
+		<Attribute 	name="emitLight" 	value="0"/>
+		<Attribute 	name="hardness" 	value="2"/>
+		<Attribute 	name="mass" 		value="8"/>
+		<Resistance name="velocity" 	value="14"/>
+		<Resistance name="mass" 		value="14"/>
+		<Resistance name="digger" 		value="4"/>
+		<Resistance name="sharpness" 	value="14"/>
+		<Resistance name="attackarea" 	value="14"/>
+		<Resistance name="heat" 		value="12"/>
+		<Resistance name="water" 		value="16"/>
+		<Resistance name="fire" 		value="16"/>
+		<Resistance name="electricity" 	value="16"/>
+		<Spawn		name="fire"			value="null"/>
+		<Spawn		name="heat"			value="glass"/>
+		<Spawn		name="water"		value="null"/>
+		<Spawn		name="destruction"	value="sand"/>
+		<Render 	front="sand" back="sand" left="sand" right="sand" top="sand" bottom="sand"/>
+	</BaseMaterial>
+		<BaseMaterial id="ironOre">
+		<Attribute 	name="transparant" 	value="no"/>
+		<Attribute 	name="solid" 		value="yes"/>
+		<Attribute 	name="burnable" 	value="no"/>
+		<Attribute 	name="conductive" 	value="no"/>
+		<Attribute 	name="emitLight" 	value="0"/>
+		<Attribute 	name="hardness" 	value="12"/>
+		<Attribute 	name="mass" 		value="10"/>
+		<Resistance name="velocity" 	value="4"/>
+		<Resistance name="mass" 		value="4"/>
+		<Resistance name="digger" 		value="12"/>
+		<Resistance name="sharpness" 	value="12"/>
+		<Resistance name="attackarea" 	value="14"/>
+		<Resistance name="heat" 		value="12"/>
+		<Resistance name="water" 		value="16"/>
+		<Resistance name="fire" 		value="16"/>
+		<Resistance name="electricity" 	value="16"/>
+		<Spawn		name="fire"			value="null"/>
+		<Spawn		name="heat"			value="iron,gravel"/>
+		<Spawn		name="water"		value="null"/>
+		<Spawn		name="destruction"	value="ironOre"/>
+		<Render 	front="ironOre" back="ironOre" left="ironOre" right="ironOre" top="ironOre" bottom="ironOre"/>		
+	</BaseMaterial>
+	<staff id="2001">
+		<firstname>low</firstname>
+		<lastname>yin fong</lastname>
+		<nickname>fong fong</nickname>
+		<salary>200000</salary>
+	</staff>
+
+</company>

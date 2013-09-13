@@ -45,10 +45,11 @@ import com.digitalemu.world.World.DlistGps;
 import com.digitalemu.text.TrueTypeFont;
 
 
-public class GameLoopText {
+public class OpenGL implements Runnable{
 	private World world;
     private boolean done = false;
     private boolean fullscreen = false;
+    private boolean displayOn=false;
     private final String windowTitle = "MyCraft";
     private boolean f1 = false;
     private DisplayMode displayMode;
@@ -126,6 +127,7 @@ public class GameLoopText {
 	float ltx,lty, ltz;
 	
 	private Player player;
+	private Thread playerThread;
 
 
 	BufferedImage test = new BufferedImage(400, 400, BufferedImage.TYPE_INT_ARGB);
@@ -139,19 +141,19 @@ public class GameLoopText {
 	}
 	
 	
-    public static void main(String args[]) {
-    	monitor = new Monitor("Server");
-		msg("Starting Mycraft");
-		stats = new Monitor("stats");
-        boolean fullscreen = false;
-        if(args.length>0) {
-            if(args[0].equalsIgnoreCase("fullscreen")) {
-                fullscreen = true;
-            }
-        }
-        GameLoopText l6 = new GameLoopText();
-        l6.run(fullscreen);
-    }
+//    public static void main(String args[]) {
+//    	monitor = new Monitor("Server");
+//		msg("Starting Mycraft");
+//		stats = new Monitor("stats");
+//        boolean fullscreen = false;
+//        if(args.length>0) {
+//            if(args[0].equalsIgnoreCase("fullscreen")) {
+//                fullscreen = true;
+//            }
+//        }
+//        OpenGL l6 = new OpenGL();
+//        l6.run(fullscreen);
+//    }
     
 //    public int compileInventoryDisplayList(){
 //        int oglDisplayList = glGenLists(1);
@@ -560,11 +562,25 @@ public class GameLoopText {
 
     
 
-    
-    
-    
-    public void run(boolean fullscreen) {
+    public void startDisplay(boolean fullscreen, World world, Player player){
+     	this.world= world;
+    	this.player=player;
         this.fullscreen = fullscreen;
+        //dlistGPS = world.compileDlist();
+        displayOn=true;
+		System.out.println("Display started ");
+    }
+    
+    @Override
+    public void run() {
+		System.out.println("OpenGL loop started on thread "+Thread.currentThread());
+		monitor = new Monitor("Server");
+		msg("Starting Mycraft");
+		stats = new Monitor("stats");
+        boolean fullscreen = false;	
+//    	this.world= world;
+//    	this.player=player;
+//        this.fullscreen = fullscreen;
         int fps=0;
 //        int inventorydisplaylist; 
 //        Font font = new Font("monospaced", Font.BOLD, 16);
@@ -575,6 +591,8 @@ public class GameLoopText {
             init();
             world = new World(1, 128,  textureMaterials);
             player    = new Player("Christian", new GPS(9.5f, 2.4f, -5.5f, world));  // starting position of player
+            playerThread = new Thread(player);
+            playerThread.start();	
             //foundMaterialPos.setWorld(world); // Not nice, but GPS needs world
             //player.setWorld(world);
             dlistGPS = world.compileDlist();
@@ -584,74 +602,82 @@ public class GameLoopText {
             Mouse.setGrabbed(true);
 
             while (!done) {
-            	time = Sys.getTime();
-            	elapsedTime = ((time - time2));
-            	// Render
-            	clearRenderer();
-            	// Render 3D Display Lists
-                initGL3D();
-            	//lookAt();
-                //player.lookAt(6);
-                drawWireframeIndex(player.lookAt(player, pitch, yaw, 6),0f);
-            	//lookAt(new GPS(position.x,position.y,position.z, world),6);
-            	
-            	
-            	for(int i=0; i<dlistGPS.length; i++){
-        			GL11.glLoadIdentity(); // Reset The Current Modelview Matrix
-        	        lookThrough(dlistGPS[i].getDlGPS());
-        	        glCallList(dlistGPS[i].getDisplayList());
-            	}
-            	if(player.lookAtMaterialFound) {
-            		GL11.glColor3f(1.0f, 0.0f, 0.0f);
-                	drawWireframeIndex(player.lookAtPos,0.02f);
-            	}
-            	else {
-            		GL11.glColor3f(0.6f, 0.6f, 0.6f);
-                	drawWireframe(player.lookAtPos);
-            	}
-        		//drawLine(lookAtVoxel);
-            	render3d = (Sys.getTime()-time);
-            	// Render 2D HUD
-            	initGL2D();
-            	drawCrossAim();
-
-    			//GL11.glLoadIdentity(); // Reset The Current Modelview Matrix
-    			render2da = (Sys.getTime()-time);
-
-    			//simpletext();
-    			showstats();
-    			render2db = (Sys.getTime()-time);
-            	//glCallList(inventorydisplaylist);
-            	//GL11.glLoadIdentity(); // Reset The Current Modelview Matrix
-
-            	//renderInventory();
-            	//GL11.glLoadIdentity(); // Reset The Current Modelview Matrix
-            	//renderTexture(textureInventoryHUD.getTexture(),hudPos.DownRight);
-
-
-            	endGL2D();
-
-            	time2=time;
-                mainloop(elapsedTime);
-                sleep(16);
-                //eeplayer.detectCollision(player,distance, yaw, pitch);
-                fps++;
-                if(time2>seconds){
-                	seconds=time2+1000;
-                	this.fps=fps;
-                    fps=0;
-                    ramTotal = Runtime.getRuntime().totalMemory()/1024;    
-                    ramFree=Runtime.getRuntime().freeMemory()/1024;
-                    ramUsed=ramTotal-ramFree;
-                }
-
-                Keyboard.poll();
-
-                Display.processMessages();
-
-                Display.swapBuffers();
-            	render2dc = (Sys.getTime()-time);
-
+            	if (displayOn){
+	            	time = Sys.getTime();
+	            	elapsedTime = ((time - time2));
+	            	// Render
+	            	clearRenderer();
+	            	// Render 3D Display Lists
+	                initGL3D();
+	            	//lookAt();
+	                //player.lookAt(6);
+	                drawWireframeIndex(player.lookAt(player, pitch, yaw, 6),0f);
+	            	//lookAt(new GPS(position.x,position.y,position.z, world),6);
+	            	
+	            	
+	            	for(int i=0; i<dlistGPS.length; i++){
+	        			GL11.glLoadIdentity(); // Reset The Current Modelview Matrix
+	        	        lookThrough(dlistGPS[i].getDlGPS());
+	        	        glCallList(dlistGPS[i].getDisplayList());
+	            	}
+	            	if(player.lookAtMaterialFound) {
+	            		GL11.glColor3f(1.0f, 0.0f, 0.0f);
+	                	drawWireframeIndex(player.lookAtPos,0.02f);
+	            	}
+	            	else {
+	            		GL11.glColor3f(0.6f, 0.6f, 0.6f);
+	                	drawWireframe(player.lookAtPos);
+	            	}
+	        		//drawLine(lookAtVoxel);
+	            	render3d = (Sys.getTime()-time);
+	            	// Render 2D HUD
+	            	initGL2D();
+	            	drawCrossAim();
+	
+	    			//GL11.glLoadIdentity(); // Reset The Current Modelview Matrix
+	    			render2da = (Sys.getTime()-time);
+	
+	    			//simpletext();
+	    			showstats();
+	    			render2db = (Sys.getTime()-time);
+	            	//glCallList(inventorydisplaylist);
+	            	//GL11.glLoadIdentity(); // Reset The Current Modelview Matrix
+	
+	            	//renderInventory();
+	            	//GL11.glLoadIdentity(); // Reset The Current Modelview Matrix
+	            	//renderTexture(textureInventoryHUD.getTexture(),hudPos.DownRight);
+	
+	
+	            	endGL2D();
+	
+	            	time2=time;
+	                //mainloop(elapsedTime);
+	                sleep(16);
+	                //eeplayer.detectCollision(player,distance, yaw, pitch);
+	                fps++;
+	                if(time2>seconds){
+	                	seconds=time2+1000;
+	                	this.fps=fps;
+	                    fps=0;
+	                    ramTotal = Runtime.getRuntime().totalMemory()/1024;    
+	                    ramFree=Runtime.getRuntime().freeMemory()/1024;
+	                    ramUsed=ramTotal-ramFree;
+	                }
+	
+	                Keyboard.poll();
+	
+	                Display.processMessages();
+	
+	                Display.swapBuffers();
+	            	render2dc = (Sys.getTime()-time);
+	
+	            }
+            
+	            else{
+	            	// Display is not on, just hang here a while 
+	            	sleep(1000);
+	            	
+	            }
             }
             cleanup();
         }
@@ -918,7 +944,7 @@ public class GameLoopText {
 //        m_force = Vector3d(0.0f, 0.0f, 0.0f);
     }
 
-    private void init() throws Exception {
+    public Textures init() throws Exception {
         createWindow();
         textureContainerHUD = new Textures("res/consoletest.png");
         textureCraftingHUD = new Textures("res/Texture_red_yellow_016.png");
@@ -926,6 +952,7 @@ public class GameLoopText {
         textureFurnaceHUD = new Textures("res/furnace.png"); 
         textureMaterials = new Textures("res/terrain.png");
         textureConsoleHUD = new Textures("res/console.png");
+        return textureMaterials;
     }
 
     private void initGL2D() {
@@ -995,5 +1022,15 @@ public class GameLoopText {
     private void cleanup() {
         Display.destroy();
     }
+
+
+//	@Override
+//	public void run() {
+//		System.out.println("OpenGL loop started on thread "+Thread.currentThread());
+//		monitor = new Monitor("Server");
+//		msg("Starting Mycraft");
+//		stats = new Monitor("stats");
+//        boolean fullscreen = false;		
+//	}
 
 }

@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<MyCraft>
+<!-- ===========================    MATERIAL    ================================ -->
+  <material name="sand">
+    <properties burnable="no" conductive="no" emitLight="0" hardness="2" mass="5" solid="yes" transparent="no"/>
+    <resistance attackarea="14" digger="4" electricity="16" fire="16" heat="12" mass="14" sharpness="14" velocity="14" water="16"/>
+    <spawn destruction="sand" fire="sand" heat="glass" water="sand"/>
+    <render back="sand" bottom="sand" front="sand" left="sand" right="sand" top="sand"/>
+  </material>
+  <material name="grass">
+    <properties burnable="yes" conductive="no" emitLight="0" hardness="4" mass="5" solid="yes" transparent="no"/>
+    <resistance attackarea="14" digger="4" electricity="16" fire="8" heat="16" mass="14" sharpness="14" velocity="14" water="16"/>
+    <spawn destruction="dirt, worm[random-40%], wines[random-10%]" fire="dirt" heat="grass" water="grass"/>
+    <render back="grass_side" bottom="dirt" front="grass_side" left="grass_side" right="grass_side" top="grass"/>
+  </material>
+    <material name="pine_needles">
+    <properties burnable="yes" conductive="no" emitLight="0" hardness="4" mass="5" solid="yes" transparent="no"/>
+    <resistance attackarea="14" digger="4" electricity="16" fire="8" heat="16" mass="14" sharpness="14" velocity="14" water="16"/>
+    <spawn destruction="dirt" fire="dirt" heat="grass" water="grass"/>
+    <render back="dirt" bottom="dirt" front="dirt" left="dirt" right="dirt" top="pine_needles"/>
+  </material>
+  <material name="dirt">
+    <properties burnable="no" conductive="no" emitLight="0" hardness="4" mass="5" solid="yes" transparent="no"/>
+    <resistance attackarea="14" digger="4" electricity="16" fire="8" heat="16" mass="14" sharpness="14" velocity="14" water="16"/>
+    <spawn destruction="dirt" fire="dirt" heat="dirt" water="dirt"/>
+    <render back="dirt" bottom="dirt" front="dirt" left="dirt" right="dirt" top="dirt"/>
+  </material>
+  <material name="gravel">
+    <properties burnable="no" conductive="no" emitLight="0" hardness="3" mass="5" solid="yes" transparent="no"/>
+    <resistance attackarea="14" digger="4" electricity="16" fire="16" heat="16" mass="14" sharpness="14" velocity="14" water="16"/>
+    <spawn destruction="gravel,object[flint,20%]" fire="gravel" heat="gravel" water="gravel"/>
+    <render back="gravel" bottom="gravel" front="gravel" left="gravel" right="gravel" top="gravel"/>
+  </material>
+  <!-- ===========================     OBJECT     ================================ -->
+  <object name="flint">
+    <properties burnable="no" conductive="no" emitLight="0" hardness="8" mass="2" solid="yes" transparent="no"/>
+    <resistance attackarea="14" digger="4" electricity="16" fire="16" heat="16" mass="14" sharpness="14" velocity="14" water="16"/>
+    <spawn destruction="null" fire="flint" heat="flint" water="flint"/>
+    <render shape="flint" image="flint"/>
+  </object>
+  <!-- =========================== CREATED OBJECT ================================ -->
+  <created_object name="work_bench">
+  	<prerequsites material="null" created_object="planks[6]" tool="axe"/>
+    <properties burnable="yes" conductive="no" emitLight="0" hardness="8" mass="2" solid="yes" transparent="no"/>
+    <resistance attackarea="14" digger="14" electricity="16" fire="16" heat="16" mass="14" sharpness="4" velocity="14" water="16"/>
+    <spawn destruction="created_object[pine_planks,6],created_object[pine_cabinet_door,2]" fire="asches" heat="coal" water="work_bench"/>
+    <render shape="box" back="pine_planks" bottom="pine_planks" front="pine_cabinet_door" left="pine_planks" right="pine_planks" top="work_bench"/>
+  </created_object>
+  <!-- ===========================     TOOL       ================================ -->
+  <tool name="flint_axe">
+  	<prerequsites material="flint[1],wood_rod[1],wines[1]" created_object="null" tool="null"/>
+    <properties type="axe" burnable="yes" conductive="no" emitLight="0" hardness="8" mass="8" solid="yes" transparent="no"/>
+    <attach attackarea="4" digger="1" mass="4" sharpness="8" velocity="8"/>
+    <spawn destruction="object[pine_rod,1], object[flint,1]" fire="asches,flint" heat="coal,flint" water="flint_axe"/>
+    <render shape="axe" head="flint" rod="pine"/>
+  </tool>
+  <tool name="iron_axe">
+  	<prerequsites material="iron[1],wood_rod[1],wines[1]" created_object="null" tool="null"/>
+    <properties type="axe" burnable="yes" conductive="no" emitLight="0" hardness="8" mass="8" solid="yes" transparent="no"/>
+    <attach attackarea="4" digger="1" mass="4" sharpness="8" velocity="8"/>
+    <spawn destruction="object[pine_rod,1], object[iron,1]" fire="asches,iron" heat="coal,iron" water="iron_axe"/>
+    <render shape="axe" head="iron" rod="pine"/>
+  </tool>
+</MyCraft>
