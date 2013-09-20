@@ -563,6 +563,10 @@ public class Chunk3 {
 		}
 	}
 	
+	public void setVoxel(long x, long y, long z, short material){
+		voxel[(int)(x%chunkBase)][(int)(y%chunkBase)][(int)(z%chunkBase)]=material;
+	}
+	
 	public void setVoxel(int x, int y, int z, short material){
 		voxel[x][y][z]=material;
 	}

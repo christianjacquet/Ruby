@@ -1,5 +1,17 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <MyCraft>
+<!-- =========================  WORLD GENERATOR    ============================= -->
+  <world name="default">
+    <properties seed="1234"/>
+    <climate 		seeddiff="-10" smear="100" minval="0" maxval="4"/>
+	<npc 			seeddiff="-10" smear="10" minval="0" maxval="4"/>
+	<structures 	seeddiff="-10" smear="10" minval="0" maxval="4"/>
+	<groundDynamic 	seeddiff="-10" smear="100" minval="0" maxval="99"/>
+	<groundBase 	seeddiff="-10" smear="20" minval="48" maxval="96"/>
+	<peakDynamic 	seeddiff="-10" smear="50" minval="0" maxval="99"/>
+	<peaks 			seeddiff="-10" smear="4" minval="0" maxval="127"/>
+	<hollow 		seeddiff="-10" smear="20" minval="0" maxval="1000"/>
+  </world>
 <!-- ===========================    MATERIAL    ================================ -->
   <material name="sand">
     <properties burnable="no" conductive="no" emitLight="0" hardness="2" mass="5" solid="yes" transparent="no"/>
